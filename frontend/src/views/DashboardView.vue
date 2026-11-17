@@ -205,7 +205,7 @@ const activeUnloadingTrucks = computed(() => {
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
             <Warehouse class="w-4 h-4 text-emerald-400" />
-            <h2 class="text-base font-semibold text-white">{{ t('dashboard.docks.title', t('docks.title')) }}</h2>
+            <h2 class="text-base font-semibold text-white">{{ t('docks.title') }}</h2>
           </div>
           <div class="flex items-center gap-4 text-xs">
             <div class="flex items-center gap-1.5 text-emerald-400">
