@@ -139,7 +139,7 @@ function getRoleConfig(role: UserRole) {
 
 <template>
   <AppLayout>
-    <div class="p-6 sm:p-8 space-y-6 max-w-7xl mx-auto w-full">
+    <div class="p-6 sm:p-8 space-y-6 w-full">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

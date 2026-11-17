@@ -61,7 +61,7 @@ const activeUnloadingTrucks = computed(() => {
 
 <template>
   <AppLayout>
-    <div class="p-6 sm:p-8 space-y-8 max-w-7xl mx-auto w-full">
+    <div class="p-6 sm:p-8 space-y-8 w-full">
       <!-- Page Header -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
