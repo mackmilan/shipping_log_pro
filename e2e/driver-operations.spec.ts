@@ -14,6 +14,11 @@ test.describe('Operações do Motorista na Tela Simplificada', () => {
     // Deve exibir cartão de ações de etapa
     await expect(page.getByText('Avançar Etapa do Caminhão')).toBeVisible();
 
+    // Deve exibir cronômetro em tempo real com segundos e indicador pulsante
+    const liveTimer = page.locator('span[title="Atualizando em tempo real"]');
+    await expect(liveTimer).toBeVisible();
+    await expect(page.locator('text=/\\d+m\\s+\\d{1,2}s/')).toBeVisible();
+
     // Se o botão Reportar Parada estiver visível, clica para abrir o modal
     const reportStopBtn = page.getByRole('button', { name: /Reportar Parada/i });
     if (await reportStopBtn.isVisible()) {

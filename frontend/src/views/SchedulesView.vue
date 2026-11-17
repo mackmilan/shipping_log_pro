@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, onUnmounted, ref, computed } from 'vue';
 import AppLayout from '../components/layout/AppLayout.vue';
 import StageBadge from '../components/common/StageBadge.vue';
 import PriorityBadge from '../components/common/PriorityBadge.vue';
@@ -45,6 +45,8 @@ const selectedScheduleForTransition = ref<UnloadingSchedule | null>(null);
 const selectedScheduleForTimeline = ref<UnloadingSchedule | null>(null);
 const isNewScheduleModalOpen = ref(false);
 
+let pollInterval: any = null;
+
 async function loadData() {
   await Promise.all([
     schedulesStore.fetchSchedules({
@@ -58,7 +60,33 @@ async function loadData() {
 
 onMounted(() => {
   loadData();
+  pollInterval = setInterval(loadData, 5000);
 });
+
+onUnmounted(() => {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
+});
+
+function getActiveStageStart(item: UnloadingSchedule) {
+  if (
+    item.currentStage === ScheduleStage.COMPLETED ||
+    item.currentStage === ScheduleStage.CANCELLED
+  ) {
+    return null;
+  }
+  const activeLog = item.stageLogs?.find((l) => !l.endedAt);
+  return activeLog?.startedAt || item.metrics?.activeStageStartedAt || null;
+}
+
+function isStageActive(item: UnloadingSchedule) {
+  return (
+    item.currentStage !== ScheduleStage.COMPLETED &&
+    item.currentStage !== ScheduleStage.CANCELLED
+  );
+}
 
 function handleFilter() {
   schedulesStore.fetchSchedules({
@@ -266,8 +294,10 @@ async function handleDelete(id: number) {
                 <!-- Active Stage Duration -->
                 <td class="py-3.5 px-4">
                   <TimeCounter
+                    :started-at="getActiveStageStart(item)"
                     :minutes="item.metrics?.activeStageDurationMinutes || 0"
                     :highlight-warning="item.currentStage === 'STOPPED'"
+                    :live="isStageActive(item)"
                   />
                 </td>
 
@@ -354,7 +384,11 @@ async function handleDelete(id: number) {
             >
               <div class="flex items-center justify-between">
                 <span class="font-mono text-xs font-bold text-white">{{ card.code }}</span>
-                <TimeCounter :minutes="card.metrics?.activeStageDurationMinutes || 0" />
+                <TimeCounter
+                  :started-at="getActiveStageStart(card)"
+                  :minutes="card.metrics?.activeStageDurationMinutes || 0"
+                  :live="isStageActive(card)"
+                />
               </div>
               <div class="text-xs font-semibold text-slate-200">{{ card.truck?.plate }}</div>
               <div class="text-[11px] text-slate-400">{{ card.truck?.driverName }} ({{ card.truck?.carrierName }})</div>
@@ -399,7 +433,12 @@ async function handleDelete(id: number) {
             >
               <div class="flex items-center justify-between">
                 <span class="font-mono text-xs font-bold text-rose-300">{{ card.code }}</span>
-                <TimeCounter :minutes="card.metrics?.activeStageDurationMinutes || 0" highlight-warning />
+                <TimeCounter
+                  :started-at="getActiveStageStart(card)"
+                  :minutes="card.metrics?.activeStageDurationMinutes || 0"
+                  highlight-warning
+                  :live="isStageActive(card)"
+                />
               </div>
               <div class="text-xs font-semibold text-white">{{ card.truck?.plate }}</div>
               <div class="text-[11px] text-slate-400">{{ card.truck?.driverName }}</div>
@@ -446,6 +485,13 @@ async function handleDelete(id: number) {
             >
               <div class="flex items-center justify-between">
                 <span class="font-mono text-xs font-bold text-white">{{ card.code }}</span>
+                <TimeCounter
+                  :started-at="getActiveStageStart(card)"
+                  :minutes="card.metrics?.activeStageDurationMinutes || 0"
+                  :live="isStageActive(card)"
+                />
+              </div>
+              <div class="flex items-center gap-1.5">
                 <StageBadge :stage="card.currentStage" />
               </div>
               <div class="text-xs font-semibold text-slate-200">{{ card.truck?.plate }}</div>
@@ -490,7 +536,11 @@ async function handleDelete(id: number) {
             >
               <div class="flex items-center justify-between">
                 <span class="font-mono text-xs font-bold text-emerald-300">{{ card.code }}</span>
-                <TimeCounter :minutes="card.metrics?.activeStageDurationMinutes || 0" />
+                <TimeCounter
+                  :started-at="getActiveStageStart(card)"
+                  :minutes="card.metrics?.activeStageDurationMinutes || 0"
+                  :live="isStageActive(card)"
+                />
               </div>
               <div class="text-xs font-semibold text-white">{{ card.truck?.plate }}</div>
               <div v-if="card.dock" class="text-[11px] text-emerald-400 font-semibold">{{ t('schedules.dockLabel') }} {{ card.dock.code }}</div>

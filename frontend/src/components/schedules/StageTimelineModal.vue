@@ -153,8 +153,11 @@ const previewImage = ref<{ url: string; caption?: string } | null>(null);
                       </template>
                     </span>
                     <TimeCounter
+                      :started-at="!log.endedAt ? log.startedAt : undefined"
+                      :ended-at="log.endedAt"
                       :minutes="log.durationMinutes || (log.endedAt ? 0 : schedule.metrics?.activeStageDurationMinutes || 0)"
                       :highlight-warning="log.stage === 'STOPPED'"
+                      :live="!log.endedAt"
                     />
                   </div>
                 </div>

@@ -66,9 +66,13 @@ export class SchedulesService {
     // Active stage duration
     const currentActiveLog = logs.find((l) => !l.endedAt);
     let activeStageDurationMinutes = 0;
+    let activeStageDurationSeconds = 0;
+    let activeStageStartedAt: Date | null = null;
     if (currentActiveLog) {
       const diffMs = now.getTime() - new Date(currentActiveLog.startedAt).getTime();
       activeStageDurationMinutes = Math.max(0, Math.floor(diffMs / 60000));
+      activeStageDurationSeconds = Math.max(0, Math.floor(diffMs / 1000));
+      activeStageStartedAt = currentActiveLog.startedAt;
     }
 
     // Window adherence check
@@ -91,6 +95,8 @@ export class SchedulesService {
         totalYardMinutes,
         totalUnloadingMinutes,
         activeStageDurationMinutes,
+        activeStageDurationSeconds,
+        activeStageStartedAt,
         isOverdue,
         delayMinutes,
       },

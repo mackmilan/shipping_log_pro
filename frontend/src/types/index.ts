@@ -105,6 +105,8 @@ export interface ScheduleMetrics {
   totalYardMinutes: number;
   totalUnloadingMinutes: number;
   activeStageDurationMinutes: number;
+  activeStageDurationSeconds?: number;
+  activeStageStartedAt?: string | null;
   isOverdue: boolean;
   delayMinutes: number;
 }

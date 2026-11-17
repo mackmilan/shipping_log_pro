@@ -31,4 +31,37 @@ describe('TimeCounter.vue', () => {
     expect(wrapper.classes()).toContain('animate-pulse');
     expect(wrapper.classes()).toContain('text-rose-300');
   });
+
+  it('formats seconds with minutes and seconds correctly', () => {
+    const wrapper = mount(TimeCounter, {
+      props: { seconds: 125 },
+    });
+    expect(wrapper.text()).toBe('2m 05s');
+  });
+
+  it('formats hours, minutes and seconds when seconds >= 3600', () => {
+    const wrapper = mount(TimeCounter, {
+      props: { seconds: 3665 },
+    });
+    expect(wrapper.text()).toBe('1h 01m 05s');
+  });
+
+  it('computes elapsed seconds from startedAt to endedAt', () => {
+    const start = new Date('2026-11-16T10:00:00Z');
+    const end = new Date('2026-11-16T10:03:45Z');
+    const wrapper = mount(TimeCounter, {
+      props: { startedAt: start, endedAt: end },
+    });
+    expect(wrapper.text()).toBe('3m 45s');
+  });
+
+  it('displays real-time live indicator dot when live is true', () => {
+    const start = new Date(Date.now() - 30 * 1000); // 30s ago
+    const wrapper = mount(TimeCounter, {
+      props: { startedAt: start, live: true },
+    });
+    const dot = wrapper.find('.animate-pulse');
+    expect(dot.exists()).toBe(true);
+    expect(wrapper.text()).toContain('0m 30s');
+  });
 });

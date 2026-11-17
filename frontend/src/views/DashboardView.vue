@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import AppLayout from '../components/layout/AppLayout.vue';
 import StageBadge from '../components/common/StageBadge.vue';
@@ -9,7 +9,7 @@ import { useSchedulesStore } from '../stores/schedules';
 import { useDocksStore } from '../stores/docks';
 import { useAuthStore } from '../stores/auth';
 import { useI18n } from '../i18n';
-import { ScheduleStage } from '../types';
+import { ScheduleStage, UnloadingSchedule } from '../types';
 import {
   Truck,
   AlertTriangle,
@@ -30,6 +30,8 @@ const { t, formatTime } = useI18n();
 
 const isRefreshing = ref(false);
 
+let pollInterval: ReturnType<typeof setInterval> | null = null;
+
 async function loadData() {
   isRefreshing.value = true;
   await Promise.all([
@@ -42,7 +44,33 @@ async function loadData() {
 
 onMounted(() => {
   loadData();
+  pollInterval = setInterval(loadData, 5000);
 });
+
+onUnmounted(() => {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
+});
+
+function getActiveStageStart(item: UnloadingSchedule) {
+  if (
+    item.currentStage === ScheduleStage.COMPLETED ||
+    item.currentStage === ScheduleStage.CANCELLED
+  ) {
+    return null;
+  }
+  const activeLog = item.stageLogs?.find((l) => !l.endedAt);
+  return activeLog?.startedAt || item.metrics?.activeStageStartedAt || null;
+}
+
+function isStageActive(item: UnloadingSchedule) {
+  return (
+    item.currentStage !== ScheduleStage.COMPLETED &&
+    item.currentStage !== ScheduleStage.CANCELLED
+  );
+}
 
 // Trucks that are stopped or overdue
 const criticalTrucks = computed(() => {
@@ -320,8 +348,10 @@ const activeUnloadingTrucks = computed(() => {
                   </td>
                   <td class="py-3.5 px-4">
                     <TimeCounter
+                      :started-at="getActiveStageStart(item)"
                       :minutes="item.metrics?.activeStageDurationMinutes || 0"
                       highlight-warning
+                      :live="isStageActive(item)"
                     />
                   </td>
                   <td class="py-3.5 px-4 text-slate-300 max-w-xs truncate">

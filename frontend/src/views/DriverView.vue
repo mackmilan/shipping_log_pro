@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useSchedulesStore } from '../stores/schedules';
@@ -74,6 +74,19 @@ const activeSchedule = computed<UnloadingSchedule | null>(() => {
   return schedulesStore.schedules.find((s) => s.id === selectedScheduleId.value) || null;
 });
 
+// Active stage started time
+const activeStageStartedAt = computed(() => {
+  if (!activeSchedule.value) return null;
+  if (
+    activeSchedule.value.currentStage === ScheduleStage.COMPLETED ||
+    activeSchedule.value.currentStage === ScheduleStage.CANCELLED
+  ) {
+    return null;
+  }
+  const activeLog = activeSchedule.value.stageLogs?.find((l) => !l.endedAt);
+  return activeLog?.startedAt || activeSchedule.value.metrics?.activeStageStartedAt || null;
+});
+
 // All available schedules for selection
 const availableSchedules = computed(() => {
   return schedulesStore.schedules.filter(
@@ -120,9 +133,21 @@ function autoSelectSchedule() {
   }
 }
 
+let pollInterval: ReturnType<typeof setInterval> | null = null;
+
 onMounted(async () => {
   await schedulesStore.fetchSchedules();
   autoSelectSchedule();
+  pollInterval = setInterval(() => {
+    schedulesStore.fetchSchedules();
+  }, 5000);
+});
+
+onUnmounted(() => {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
 });
 
 watch(
@@ -429,8 +454,10 @@ function handleLogout() {
             <div class="text-right">
               <span class="text-[11px] text-slate-400 block">{{ t('driverView.timeInCurrentStage') }}</span>
               <TimeCounter
+                :started-at="activeStageStartedAt"
                 :minutes="activeSchedule.metrics?.activeStageDurationMinutes || 0"
                 :highlight-warning="activeSchedule.currentStage === ScheduleStage.STOPPED"
+                live
               />
             </div>
           </div>
