@@ -3,11 +3,13 @@ import { onMounted, ref } from 'vue';
 import AppLayout from '../components/layout/AppLayout.vue';
 import { useTrucksStore } from '../stores/trucks';
 import { useAuthStore } from '../stores/auth';
+import { useI18n } from '../i18n';
 import { Truck as TruckType } from '../types';
 import { Truck, Plus, Edit, Trash2, X, Phone, UserCheck } from 'lucide-vue-next';
 
 const trucksStore = useTrucksStore();
 const authStore = useAuthStore();
+const { t } = useI18n();
 
 const isModalOpen = ref(false);
 const editingTruckId = ref<number | null>(null);
@@ -44,7 +46,7 @@ function openEditModal(truck: TruckType) {
 
 async function handleSubmit() {
   if (!formPlate.value || !formDriverName.value || !formCarrierName.value) {
-    alert('Preencha os campos obrigatórios (Placa, Motorista e Transportadora)');
+    alert(t('trucks.errors.fillRequired'));
     return;
   }
 
@@ -68,16 +70,16 @@ async function handleSubmit() {
     }
     isModalOpen.value = false;
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao salvar caminhão');
+    alert(err.response?.data?.message || t('trucks.errors.saveError'));
   }
 }
 
 async function handleDelete(id: number) {
-  if (!confirm('Deseja realmente remover este caminhão?')) return;
+  if (!confirm(t('trucks.deleteConfirm'))) return;
   try {
     await trucksStore.deleteTruck(id);
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao excluir caminhão');
+    alert(err.response?.data?.message || t('trucks.errors.deleteError'));
   }
 }
 </script>
@@ -89,13 +91,13 @@ async function handleDelete(id: number) {
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-2xl font-bold tracking-tight text-white">Caminhões e Frotas</h1>
+            <h1 class="text-2xl font-bold tracking-tight text-white">{{ t('trucks.title') }}</h1>
             <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono border border-slate-700">
-              {{ trucksStore.trucks.length }} cadastrados
+              {{ t('trucks.truckCount', { count: trucksStore.trucks.length }) }}
             </span>
           </div>
           <p class="text-sm text-slate-400 mt-1">
-            Cadastro de veículos, transportadoras e motoristas autorizados
+            {{ t('trucks.subtitle') }}
           </p>
         </div>
 
@@ -105,7 +107,7 @@ async function handleDelete(id: number) {
           class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all"
         >
           <Plus class="w-4 h-4" />
-          <span>Cadastrar Caminhão</span>
+          <span>{{ t('trucks.newTruck') }}</span>
         </button>
       </div>
 
@@ -115,12 +117,12 @@ async function handleDelete(id: number) {
           <table class="w-full text-left text-xs">
             <thead class="bg-slate-950/60 border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
               <tr>
-                <th class="py-3 px-4">Placa</th>
-                <th class="py-3 px-4">Tipo do Veículo</th>
-                <th class="py-3 px-4">Motorista</th>
-                <th class="py-3 px-4">Contato Telefônico</th>
-                <th class="py-3 px-4">Transportadora</th>
-                <th class="py-3 px-4 text-right">Ações</th>
+                <th class="py-3 px-4">{{ t('trucks.plate') }}</th>
+                <th class="py-3 px-4">{{ t('trucks.truckType') }}</th>
+                <th class="py-3 px-4">{{ t('trucks.driver') }}</th>
+                <th class="py-3 px-4">{{ t('trucks.phone') }}</th>
+                <th class="py-3 px-4">{{ t('trucks.carrier') }}</th>
+                <th class="py-3 px-4 text-right">{{ t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60">
@@ -154,7 +156,7 @@ async function handleDelete(id: number) {
                       v-if="authStore.isOperator"
                       @click="openEditModal(truck)"
                       class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                      title="Editar Caminhão"
+                      :title="t('trucks.editTruck')"
                     >
                       <Edit class="w-4 h-4" />
                     </button>
@@ -162,7 +164,7 @@ async function handleDelete(id: number) {
                       v-if="authStore.isAdmin"
                       @click="handleDelete(truck.id)"
                       class="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                      title="Excluir Caminhão"
+                      :title="t('trucks.deleteTruck')"
                     >
                       <Trash2 class="w-4 h-4" />
                     </button>
@@ -172,7 +174,7 @@ async function handleDelete(id: number) {
 
               <tr v-if="trucksStore.trucks.length === 0">
                 <td colspan="6" class="text-center py-8 text-slate-500">
-                  Nenhum caminhão cadastrado até o momento.
+                  {{ t('trucks.emptyList') }}
                 </td>
               </tr>
             </tbody>
@@ -188,7 +190,7 @@ async function handleDelete(id: number) {
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <h3 class="text-base font-semibold text-white">
-              {{ editingTruckId ? 'Editar Caminhão' : 'Cadastrar Caminhão' }}
+              {{ editingTruckId ? t('trucks.editTruck') : t('trucks.newTruck') }}
             </h3>
             <button @click="isModalOpen = false" class="text-slate-400 hover:text-white">
               <X class="w-5 h-5" />
@@ -198,7 +200,7 @@ async function handleDelete(id: number) {
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Placa *</label>
+                <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('trucks.plateRequired') }}</label>
                 <input
                   v-model="formPlate"
                   type="text"
@@ -209,7 +211,7 @@ async function handleDelete(id: number) {
               </div>
 
               <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Veículo</label>
+                <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('trucks.truckType') }}</label>
                 <input
                   v-model="formTruckType"
                   type="text"
@@ -220,7 +222,7 @@ async function handleDelete(id: number) {
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1">Nome do Motorista *</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('trucks.driverRequired') }}</label>
               <input
                 v-model="formDriverName"
                 type="text"
@@ -231,17 +233,17 @@ async function handleDelete(id: number) {
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1">Telefone / WhatsApp</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('trucks.phone') }}</label>
               <input
                 v-model="formDriverPhone"
                 type="text"
-                placeholder="Ex: (11) 98765-4321"
+                :placeholder="t('trucks.phonePlaceholder')"
                 class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white"
               />
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1">Transportadora *</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('trucks.carrierRequired') }}</label>
               <input
                 v-model="formCarrierName"
                 type="text"
@@ -257,13 +259,13 @@ async function handleDelete(id: number) {
                 @click="isModalOpen = false"
                 class="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white"
               >
-                Cancelar
+                {{ t('common.cancel') }}
               </button>
               <button
                 type="submit"
                 class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-white"
               >
-                Salvar Caminhão
+                {{ t('trucks.saveTruck') }}
               </button>
             </div>
           </form>

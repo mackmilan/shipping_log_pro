@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue';
 import AppLayout from '../components/layout/AppLayout.vue';
 import { api } from '../services/api';
+import { useI18n } from '../i18n';
 import { User, UserRole } from '../types';
 import {
   Users,
@@ -15,6 +16,8 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-vue-next';
+
+const { t } = useI18n();
 
 const users = ref<User[]>([]);
 const isLoading = ref(false);
@@ -34,7 +37,7 @@ async function loadUsers() {
     const res = await api.get<User[]>('/users');
     users.value = res.data;
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao carregar usuários');
+    alert(err.response?.data?.message || t('users.errors.loadError'));
   } finally {
     isLoading.value = false;
   }
@@ -66,12 +69,12 @@ function openEditModal(user: User) {
 
 async function handleSubmit() {
   if (!formName.value || !formEmail.value) {
-    alert('Preencha nome e e-mail');
+    alert(t('users.errors.fillRequired'));
     return;
   }
 
   if (!editingUserId.value && (!formPassword.value || formPassword.value.length < 6)) {
-    alert('A senha inicial deve ter pelo menos 6 caracteres');
+    alert(t('users.errors.passwordLength'));
     return;
   }
 
@@ -96,17 +99,17 @@ async function handleSubmit() {
     isModalOpen.value = false;
     await loadUsers();
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao salvar usuário');
+    alert(err.response?.data?.message || t('users.errors.saveError'));
   }
 }
 
 async function handleDelete(id: number) {
-  if (!confirm('Deseja realmente remover este usuário?')) return;
+  if (!confirm(t('users.deleteConfirm'))) return;
   try {
     await api.delete(`/users/${id}`);
     await loadUsers();
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao excluir usuário');
+    alert(err.response?.data?.message || t('users.errors.deleteError'));
   }
 }
 
@@ -114,19 +117,19 @@ function getRoleConfig(role: UserRole) {
   switch (role) {
     case UserRole.ADMIN:
       return {
-        label: 'Administrador',
+        label: t('roles.admin'),
         class: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
         icon: ShieldCheck,
       };
     case UserRole.OPERATOR:
       return {
-        label: 'Operador',
+        label: t('roles.operator'),
         class: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
         icon: ShieldAlert,
       };
     default:
       return {
-        label: 'Usuário',
+        label: t('roles.userShort'),
         class: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
         icon: UserCheck,
       };
@@ -141,13 +144,13 @@ function getRoleConfig(role: UserRole) {
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-2xl font-bold tracking-tight text-white">Gestão de Usuários & Perfis</h1>
+            <h1 class="text-2xl font-bold tracking-tight text-white">{{ t('users.title') }}</h1>
             <span class="text-xs px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 font-mono border border-indigo-500/20">
-              Apenas Administrador
+              {{ t('users.adminOnly') }}
             </span>
           </div>
           <p class="text-sm text-slate-400 mt-1">
-            Controle de acessos locais: Administrador, Operador e Usuário (sem dependências externas)
+            {{ t('users.subtitle') }}
           </p>
         </div>
 
@@ -156,7 +159,7 @@ function getRoleConfig(role: UserRole) {
           class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all"
         >
           <Plus class="w-4 h-4" />
-          <span>Novo Usuário</span>
+          <span>{{ t('users.newUser') }}</span>
         </button>
       </div>
 
@@ -166,11 +169,11 @@ function getRoleConfig(role: UserRole) {
           <table class="w-full text-left text-xs">
             <thead class="bg-slate-950/60 border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
               <tr>
-                <th class="py-3 px-4">Nome do Usuário</th>
-                <th class="py-3 px-4">E-mail</th>
-                <th class="py-3 px-4">Perfil de Acesso (Role)</th>
-                <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4 text-right">Ações</th>
+                <th class="py-3 px-4">{{ t('users.tableHeaders.name') }}</th>
+                <th class="py-3 px-4">{{ t('users.tableHeaders.email') }}</th>
+                <th class="py-3 px-4">{{ t('users.tableHeaders.role') }}</th>
+                <th class="py-3 px-4">{{ t('users.tableHeaders.status') }}</th>
+                <th class="py-3 px-4 text-right">{{ t('users.tableHeaders.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60">
@@ -202,14 +205,14 @@ function getRoleConfig(role: UserRole) {
                     class="inline-flex items-center gap-1 text-emerald-400 font-medium"
                   >
                     <CheckCircle class="w-3.5 h-3.5" />
-                    <span>Ativo</span>
+                    <span>{{ t('common.active') }}</span>
                   </span>
                   <span
                     v-else
                     class="inline-flex items-center gap-1 text-slate-500 font-medium"
                   >
                     <XCircle class="w-3.5 h-3.5" />
-                    <span>Inativo</span>
+                    <span>{{ t('common.inactive') }}</span>
                   </span>
                 </td>
                 <td class="py-3.5 px-4 text-right">
@@ -217,14 +220,14 @@ function getRoleConfig(role: UserRole) {
                     <button
                       @click="openEditModal(u)"
                       class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                      title="Editar Usuário"
+                      :title="t('users.editUser')"
                     >
                       <Edit class="w-4 h-4" />
                     </button>
                     <button
                       @click="handleDelete(u.id)"
                       class="p-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                      title="Excluir Usuário"
+                      :title="t('common.delete')"
                     >
                       <Trash2 class="w-4 h-4" />
                     </button>
@@ -244,7 +247,7 @@ function getRoleConfig(role: UserRole) {
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <h3 class="text-base font-semibold text-white">
-              {{ editingUserId ? 'Editar Usuário' : 'Novo Usuário Local' }}
+              {{ editingUserId ? t('users.editUser') : t('users.newLocalUser') }}
             </h3>
             <button @click="isModalOpen = false" class="text-slate-400 hover:text-white">
               <X class="w-5 h-5" />
@@ -253,7 +256,7 @@ function getRoleConfig(role: UserRole) {
 
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1">Nome Completo *</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('users.fullNameRequired') }}</label>
               <input
                 v-model="formName"
                 type="text"
@@ -264,7 +267,7 @@ function getRoleConfig(role: UserRole) {
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1">E-mail de Acesso *</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('users.emailRequired') }}</label>
               <input
                 v-model="formEmail"
                 type="email"
@@ -276,7 +279,7 @@ function getRoleConfig(role: UserRole) {
 
             <div>
               <label class="block text-xs font-medium text-slate-300 mb-1">
-                Senha {{ editingUserId ? '(deixe em branco para não alterar)' : '*' }}
+                {{ t('users.password') }} {{ editingUserId ? t('users.passwordBlankNote') : '*' }}
               </label>
               <input
                 v-model="formPassword"
@@ -288,14 +291,14 @@ function getRoleConfig(role: UserRole) {
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1">Perfil de Acesso (Role) *</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('users.roleRequired') }}</label>
               <select
                 v-model="formRole"
                 class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white"
               >
-                <option :value="UserRole.ADMIN">Administrador (Acesso total)</option>
-                <option :value="UserRole.OPERATOR">Operador (Avanço de etapas e docas)</option>
-                <option :value="UserRole.USER">Usuário (Somente leitura)</option>
+                <option :value="UserRole.ADMIN">{{ t('users.roleAdminDesc') }}</option>
+                <option :value="UserRole.OPERATOR">{{ t('users.roleOperatorDesc') }}</option>
+                <option :value="UserRole.USER">{{ t('users.roleUserDesc') }}</option>
               </select>
             </div>
 
@@ -307,7 +310,7 @@ function getRoleConfig(role: UserRole) {
                 class="rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0"
               />
               <label for="activeCheckbox" class="text-xs text-slate-300 font-medium">
-                Usuário Ativo (Pode realizar login)
+                {{ t('users.userActive') }}
               </label>
             </div>
 
@@ -317,13 +320,13 @@ function getRoleConfig(role: UserRole) {
                 @click="isModalOpen = false"
                 class="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white"
               >
-                Cancelar
+                {{ t('common.cancel') }}
               </button>
               <button
                 type="submit"
                 class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-white"
               >
-                Salvar Usuário
+                {{ t('users.saveUser') }}
               </button>
             </div>
           </form>

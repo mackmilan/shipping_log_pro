@@ -11,6 +11,7 @@ import { useSchedulesStore } from '../stores/schedules';
 import { useDocksStore } from '../stores/docks';
 import { useTrucksStore } from '../stores/trucks';
 import { useAuthStore } from '../stores/auth';
+import { useI18n } from '../i18n';
 import { UnloadingSchedule, ScheduleStage } from '../types';
 import {
   CalendarClock,
@@ -32,6 +33,7 @@ const schedulesStore = useSchedulesStore();
 const docksStore = useDocksStore();
 const trucksStore = useTrucksStore();
 const authStore = useAuthStore();
+const { t, formatDate } = useI18n();
 
 // View and filter states
 const viewMode = ref<'list' | 'board'>('list');
@@ -76,7 +78,7 @@ async function handleTransitionSubmit(payload: any) {
     await schedulesStore.updateStage(selectedScheduleForTransition.value.id, payload);
     selectedScheduleForTransition.value = null;
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao atualizar etapa');
+    alert(err.response?.data?.message || t('schedules.errors.stageUpdate'));
   }
 }
 
@@ -86,29 +88,18 @@ async function handleNewScheduleSubmit(payload: any) {
     await schedulesStore.createSchedule(payload);
     isNewScheduleModalOpen.value = false;
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao criar agendamento');
+    alert(err.response?.data?.message || t('schedules.errors.create'));
   }
 }
 
 // Delete schedule handler (Admin only)
 async function handleDelete(id: number) {
-  if (!confirm('Deseja realmente excluir este agendamento?')) return;
+  if (!confirm(t('schedules.deleteConfirm'))) return;
   try {
     await schedulesStore.deleteSchedule(id);
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao excluir agendamento');
+    alert(err.response?.data?.message || t('schedules.errors.delete'));
   }
-}
-
-function formatDate(dateStr?: string | null) {
-  if (!dateStr) return '—';
-  const d = new Date(dateStr);
-  return d.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 </script>
 
@@ -119,13 +110,13 @@ function formatDate(dateStr?: string | null) {
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-2xl font-bold tracking-tight text-white">Janelas de Descarga</h1>
+            <h1 class="text-2xl font-bold tracking-tight text-white">{{ t('schedules.title') }}</h1>
             <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono border border-slate-700">
-              {{ schedulesStore.schedules.length }} agendamento(s)
+              {{ t('schedules.scheduleCount', { count: schedulesStore.schedules.length }) }}
             </span>
           </div>
           <p class="text-sm text-slate-400 mt-1">
-            Controle de tempos por etapa: em trânsito, parado, pátio e descarga
+            {{ t('schedules.subtitle') }}
           </p>
         </div>
 
@@ -138,7 +129,7 @@ function formatDate(dateStr?: string | null) {
                 'p-1.5 rounded-lg text-xs font-medium transition-colors',
                 viewMode === 'list' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200',
               ]"
-              title="Visualização em Lista"
+              :title="t('schedules.listView')"
             >
               <List class="w-4 h-4" />
             </button>
@@ -148,7 +139,7 @@ function formatDate(dateStr?: string | null) {
                 'p-1.5 rounded-lg text-xs font-medium transition-colors',
                 viewMode === 'board' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200',
               ]"
-              title="Visualização em Quadro"
+              :title="t('schedules.boardView')"
             >
               <LayoutGrid class="w-4 h-4" />
             </button>
@@ -161,7 +152,7 @@ function formatDate(dateStr?: string | null) {
             class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all"
           >
             <Plus class="w-4 h-4" />
-            <span>Nova Janela</span>
+            <span>{{ t('schedules.newSchedule') }}</span>
           </button>
         </div>
       </div>
@@ -174,7 +165,7 @@ function formatDate(dateStr?: string | null) {
             v-model="searchTerm"
             @input="handleFilter"
             type="text"
-            placeholder="Buscar por placa, motorista ou código..."
+            :placeholder="t('schedules.searchPlaceholder')"
             class="w-full pl-9 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
           />
         </div>
@@ -187,14 +178,14 @@ function formatDate(dateStr?: string | null) {
               @change="handleFilter"
               class="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
             >
-              <option value="">Todas as Etapas</option>
-              <option value="IN_TRANSIT">Em Trânsito</option>
-              <option value="STOPPED">Parado (Alerta)</option>
-              <option value="WAITING_YARD">No Pátio / Fila</option>
-              <option value="AT_DOCK">Na Doca</option>
-              <option value="UNLOADING">Em Descarga</option>
-              <option value="COMPLETED">Finalizado</option>
-              <option value="SCHEDULED">Agendado</option>
+              <option value="">{{ t('stages.allStages') }}</option>
+              <option value="IN_TRANSIT">{{ t('stages.inTransit') }}</option>
+              <option value="STOPPED">{{ t('stages.stoppedAlert') }}</option>
+              <option value="WAITING_YARD">{{ t('stages.waitingYard') }}</option>
+              <option value="AT_DOCK">{{ t('stages.atDock') }}</option>
+              <option value="UNLOADING">{{ t('stages.unloading') }}</option>
+              <option value="COMPLETED">{{ t('stages.completed') }}</option>
+              <option value="SCHEDULED">{{ t('stages.scheduled') }}</option>
             </select>
           </div>
         </div>
@@ -206,14 +197,14 @@ function formatDate(dateStr?: string | null) {
           <table class="w-full text-left text-xs">
             <thead class="bg-slate-950/60 border-b border-slate-800 text-slate-400 uppercase tracking-wider text-[10px]">
               <tr>
-                <th class="py-3 px-4">Código & Carga</th>
-                <th class="py-3 px-4">Caminhão & Motorista</th>
-                <th class="py-3 px-4">Doca</th>
-                <th class="py-3 px-4">Janela Programada</th>
-                <th class="py-3 px-4">Etapa Atual</th>
-                <th class="py-3 px-4">Tempo na Etapa</th>
-                <th class="py-3 px-4">Tempos Totais</th>
-                <th class="py-3 px-4 text-right">Ações</th>
+                <th class="py-3 px-4">{{ t('schedules.tableHeaders.codeAndCargo') }}</th>
+                <th class="py-3 px-4">{{ t('schedules.tableHeaders.truckAndDriver') }}</th>
+                <th class="py-3 px-4">{{ t('schedules.tableHeaders.dock') }}</th>
+                <th class="py-3 px-4">{{ t('schedules.tableHeaders.scheduledWindow') }}</th>
+                <th class="py-3 px-4">{{ t('schedules.tableHeaders.currentStage') }}</th>
+                <th class="py-3 px-4">{{ t('schedules.tableHeaders.timeInStage') }}</th>
+                <th class="py-3 px-4">{{ t('schedules.tableHeaders.totalTimes') }}</th>
+                <th class="py-3 px-4 text-right">{{ t('schedules.tableHeaders.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60">
@@ -250,7 +241,7 @@ function formatDate(dateStr?: string | null) {
                     <Warehouse class="w-3.5 h-3.5" />
                     <span>{{ item.dock.code }}</span>
                   </div>
-                  <span v-else class="text-slate-500 italic">Não vinculada</span>
+                  <span v-else class="text-slate-500 italic">{{ t('common.unassigned') }}</span>
                 </td>
 
                 <!-- Planned Window -->
@@ -259,11 +250,11 @@ function formatDate(dateStr?: string | null) {
                     {{ formatDate(item.scheduledStartTime) }}
                   </div>
                   <div class="text-[10px] text-slate-400">
-                    até {{ formatDate(item.scheduledEndTime) }}
+                    {{ t('schedules.until') }} {{ formatDate(item.scheduledEndTime) }}
                   </div>
                   <div v-if="item.metrics?.isOverdue" class="text-[10px] text-rose-400 font-semibold mt-0.5 flex items-center gap-1">
                     <AlertTriangle class="w-3 h-3" />
-                    <span>Atraso: +{{ item.metrics.delayMinutes }} min</span>
+                    <span>{{ t('schedules.delay', { minutes: item.metrics.delayMinutes }) }}</span>
                   </div>
                 </td>
 
@@ -284,13 +275,13 @@ function formatDate(dateStr?: string | null) {
                 <td class="py-3.5 px-4">
                   <div class="flex flex-col gap-1 text-[10px] font-mono">
                     <span v-if="item.metrics?.totalInTransitMinutes" class="text-blue-400">
-                      Rota: {{ item.metrics.totalInTransitMinutes }}m
+                      {{ t('schedules.breakdownRoute', { minutes: item.metrics.totalInTransitMinutes }) }}
                     </span>
                     <span v-if="item.metrics?.totalStoppedMinutes" class="text-rose-400 font-bold">
-                      Parado: {{ item.metrics.totalStoppedMinutes }}m
+                      {{ t('schedules.breakdownStopped', { minutes: item.metrics.totalStoppedMinutes }) }}
                     </span>
                     <span v-if="item.metrics?.totalUnloadingMinutes" class="text-emerald-400">
-                      Descarga: {{ item.metrics.totalUnloadingMinutes }}m
+                      {{ t('schedules.breakdownUnloading', { minutes: item.metrics.totalUnloadingMinutes }) }}
                     </span>
                   </div>
                 </td>
@@ -303,17 +294,17 @@ function formatDate(dateStr?: string | null) {
                       v-if="authStore.isOperator && item.currentStage !== 'COMPLETED' && item.currentStage !== 'CANCELLED'"
                       @click="openTransitionModal(item)"
                       class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-medium transition-colors flex items-center gap-1"
-                      title="Mudar Etapa"
+                      :title="t('schedules.changeStage')"
                     >
                       <ArrowRightCircle class="w-3.5 h-3.5" />
-                      <span>Etapa</span>
+                      <span>{{ t('schedules.stageAction') }}</span>
                     </button>
 
                     <!-- View Timeline History -->
                     <button
                       @click="selectedScheduleForTimeline = item"
                       class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                      title="Ver Histórico de Etapas"
+                      :title="t('schedules.viewHistory')"
                     >
                       <History class="w-4 h-4" />
                     </button>
@@ -323,7 +314,7 @@ function formatDate(dateStr?: string | null) {
                       v-if="authStore.isAdmin"
                       @click="handleDelete(item.id)"
                       class="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                      title="Excluir Agendamento"
+                      :title="t('schedules.deleteSchedule')"
                     >
                       <Trash2 class="w-4 h-4" />
                     </button>
@@ -333,7 +324,7 @@ function formatDate(dateStr?: string | null) {
 
               <tr v-if="schedulesStore.schedules.length === 0">
                 <td colspan="8" class="text-center py-10 text-slate-500">
-                  Nenhuma janela de descarga encontrada com os filtros selecionados.
+                  {{ t('schedules.emptyState') }}
                 </td>
               </tr>
             </tbody>
@@ -348,7 +339,7 @@ function formatDate(dateStr?: string | null) {
           <div class="flex items-center justify-between pb-2 border-b border-slate-800">
             <span class="text-xs font-bold text-blue-400 flex items-center gap-1.5">
               <Truck class="w-4 h-4" />
-              Em Trânsito
+              {{ t('schedules.boardTransit') }}
             </span>
             <span class="text-xs font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
               {{ schedulesStore.schedules.filter(s => s.currentStage === 'IN_TRANSIT').length }}
@@ -374,14 +365,14 @@ function formatDate(dateStr?: string | null) {
                   @click="selectedScheduleForTimeline = card"
                   class="text-[11px] text-slate-400 hover:text-white"
                 >
-                  Histórico
+                  {{ t('schedules.btnHistory') }}
                 </button>
                 <button
                   v-if="authStore.isOperator"
                   @click="openTransitionModal(card)"
                   class="text-[11px] text-emerald-400 hover:text-emerald-300 font-medium"
                 >
-                  Avançar ➔
+                  {{ t('schedules.btnAdvance') }}
                 </button>
               </div>
             </div>
@@ -393,7 +384,7 @@ function formatDate(dateStr?: string | null) {
           <div class="flex items-center justify-between pb-2 border-b border-rose-500/20">
             <span class="text-xs font-bold text-rose-400 flex items-center gap-1.5">
               <AlertTriangle class="w-4 h-4" />
-              Parado (Alerta)
+              {{ t('schedules.boardStopped') }}
             </span>
             <span class="text-xs font-mono px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
               {{ schedulesStore.schedules.filter(s => s.currentStage === 'STOPPED').length }}
@@ -413,7 +404,7 @@ function formatDate(dateStr?: string | null) {
               <div class="text-xs font-semibold text-white">{{ card.truck?.plate }}</div>
               <div class="text-[11px] text-slate-400">{{ card.truck?.driverName }}</div>
               <div class="text-[11px] text-rose-300 bg-rose-500/10 p-1.5 rounded border border-rose-500/20">
-                Motivo: {{ card.stageLogs?.slice(-1)[0]?.reason || 'Não informado' }}
+                {{ t('schedules.reasonLabel') }} {{ card.stageLogs?.slice(-1)[0]?.reason || t('schedules.reasonNotReported') }}
               </div>
 
               <div class="pt-2 border-t border-slate-700/40 flex items-center justify-between">
@@ -421,14 +412,14 @@ function formatDate(dateStr?: string | null) {
                   @click="selectedScheduleForTimeline = card"
                   class="text-[11px] text-slate-400 hover:text-white"
                 >
-                  Histórico
+                  {{ t('schedules.btnHistory') }}
                 </button>
                 <button
                   v-if="authStore.isOperator"
                   @click="openTransitionModal(card)"
                   class="text-[11px] text-emerald-400 hover:text-emerald-300 font-medium"
                 >
-                  Liberar ➔
+                  {{ t('schedules.btnRelease') }}
                 </button>
               </div>
             </div>
@@ -440,7 +431,7 @@ function formatDate(dateStr?: string | null) {
           <div class="flex items-center justify-between pb-2 border-b border-slate-800">
             <span class="text-xs font-bold text-purple-400 flex items-center gap-1.5">
               <Clock class="w-4 h-4" />
-              Pátio / Doca
+              {{ t('schedules.boardYardDock') }}
             </span>
             <span class="text-xs font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
               {{ schedulesStore.schedules.filter(s => s.currentStage === 'WAITING_YARD' || s.currentStage === 'AT_DOCK').length }}
@@ -458,21 +449,21 @@ function formatDate(dateStr?: string | null) {
                 <StageBadge :stage="card.currentStage" />
               </div>
               <div class="text-xs font-semibold text-slate-200">{{ card.truck?.plate }}</div>
-              <div v-if="card.dock" class="text-[11px] text-indigo-400 font-medium">Doca: {{ card.dock.code }}</div>
+              <div v-if="card.dock" class="text-[11px] text-indigo-400 font-medium">{{ t('schedules.dockLabel') }} {{ card.dock.code }}</div>
 
               <div class="pt-2 border-t border-slate-700/40 flex items-center justify-between">
                 <button
                   @click="selectedScheduleForTimeline = card"
                   class="text-[11px] text-slate-400 hover:text-white"
                 >
-                  Histórico
+                  {{ t('schedules.btnHistory') }}
                 </button>
                 <button
                   v-if="authStore.isOperator"
                   @click="openTransitionModal(card)"
                   class="text-[11px] text-emerald-400 hover:text-emerald-300 font-medium"
                 >
-                  Descarregar ➔
+                  {{ t('schedules.btnUnload') }}
                 </button>
               </div>
             </div>
@@ -484,7 +475,7 @@ function formatDate(dateStr?: string | null) {
           <div class="flex items-center justify-between pb-2 border-b border-emerald-500/20">
             <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
               <Warehouse class="w-4 h-4" />
-              Em Descarga
+              {{ t('schedules.boardUnloading') }}
             </span>
             <span class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               {{ schedulesStore.schedules.filter(s => s.currentStage === 'UNLOADING').length }}
@@ -502,7 +493,7 @@ function formatDate(dateStr?: string | null) {
                 <TimeCounter :minutes="card.metrics?.activeStageDurationMinutes || 0" />
               </div>
               <div class="text-xs font-semibold text-white">{{ card.truck?.plate }}</div>
-              <div v-if="card.dock" class="text-[11px] text-emerald-400 font-semibold">Doca: {{ card.dock.code }}</div>
+              <div v-if="card.dock" class="text-[11px] text-emerald-400 font-semibold">{{ t('schedules.dockLabel') }} {{ card.dock.code }}</div>
               <div class="text-[11px] text-slate-300 truncate">{{ card.cargoDescription }}</div>
 
               <div class="pt-2 border-t border-slate-700/40 flex items-center justify-between">
@@ -510,14 +501,14 @@ function formatDate(dateStr?: string | null) {
                   @click="selectedScheduleForTimeline = card"
                   class="text-[11px] text-slate-400 hover:text-white"
                 >
-                  Histórico
+                  {{ t('schedules.btnHistory') }}
                 </button>
                 <button
                   v-if="authStore.isOperator"
                   @click="openTransitionModal(card)"
                   class="text-[11px] text-emerald-400 hover:text-emerald-300 font-medium"
                 >
-                  Finalizar ➔
+                  {{ t('schedules.btnComplete') }}
                 </button>
               </div>
             </div>

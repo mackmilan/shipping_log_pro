@@ -3,11 +3,13 @@ import { onMounted, ref } from 'vue';
 import AppLayout from '../components/layout/AppLayout.vue';
 import { useDocksStore } from '../stores/docks';
 import { useAuthStore } from '../stores/auth';
+import { useI18n } from '../i18n';
 import { DockStatus, DockType, Dock } from '../types';
 import { Warehouse, Plus, Edit, Trash2, X, Check } from 'lucide-vue-next';
 
 const docksStore = useDocksStore();
 const authStore = useAuthStore();
+const { t } = useI18n();
 
 const isModalOpen = ref(false);
 const editingDockId = ref<number | null>(null);
@@ -44,7 +46,7 @@ function openEditModal(dock: Dock) {
 
 async function handleSubmit() {
   if (!formCode.value || !formName.value) {
-    alert('Preencha código e nome da doca');
+    alert(t('docks.errors.fillRequired'));
     return;
   }
 
@@ -68,16 +70,16 @@ async function handleSubmit() {
     }
     isModalOpen.value = false;
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao salvar doca');
+    alert(err.response?.data?.message || t('docks.errors.saveError'));
   }
 }
 
 async function handleDelete(id: number) {
-  if (!confirm('Deseja realmente remover esta doca?')) return;
+  if (!confirm(t('docks.deleteConfirm'))) return;
   try {
     await docksStore.deleteDock(id);
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao excluir doca');
+    alert(err.response?.data?.message || t('docks.errors.deleteError'));
   }
 }
 </script>
@@ -89,13 +91,13 @@ async function handleDelete(id: number) {
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-2xl font-bold tracking-tight text-white">Docas de Descarga</h1>
+            <h1 class="text-2xl font-bold tracking-tight text-white">{{ t('docks.title') }}</h1>
             <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono border border-slate-700">
-              {{ docksStore.docks.length }} docas
+              {{ t('docks.dockCount', { count: docksStore.docks.length }) }}
             </span>
           </div>
           <p class="text-sm text-slate-400 mt-1">
-            Gestão de baias de recebimento e disponibilidade operacional
+            {{ t('docks.subtitle') }}
           </p>
         </div>
 
@@ -105,7 +107,7 @@ async function handleDelete(id: number) {
           class="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all"
         >
           <Plus class="w-4 h-4" />
-          <span>Nova Doca</span>
+          <span>{{ t('docks.newDock') }}</span>
         </button>
       </div>
 
@@ -131,12 +133,12 @@ async function handleDelete(id: number) {
                     : 'bg-slate-700/30 text-slate-400 border-slate-700',
                 ]"
               >
-                {{ dock.status === 'AVAILABLE' ? 'Disponível' : dock.status === 'OCCUPIED' ? 'Ocupada' : 'Manutenção' }}
+                {{ dock.status === 'AVAILABLE' ? t('docks.available') : dock.status === 'OCCUPIED' ? t('docks.occupied') : t('docks.maintenance') }}
               </span>
             </div>
 
             <h3 class="text-base font-semibold text-white mb-1">{{ dock.name }}</h3>
-            <div class="text-xs text-slate-400 mb-2">Tipo: <span class="text-slate-300">{{ dock.type }}</span></div>
+            <div class="text-xs text-slate-400 mb-2">{{ t('docks.type') }}: <span class="text-slate-300">{{ dock.type }}</span></div>
             <p v-if="dock.notes" class="text-xs text-slate-400 italic bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80">
               {{ dock.notes }}
             </p>
@@ -151,14 +153,14 @@ async function handleDelete(id: number) {
               class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition-colors"
             >
               <Edit class="w-3.5 h-3.5" />
-              <span>Editar</span>
+              <span>{{ t('common.edit') }}</span>
             </button>
 
             <button
               v-if="authStore.isAdmin"
               @click="handleDelete(dock.id)"
               class="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-              title="Excluir Doca"
+              :title="t('common.delete')"
             >
               <Trash2 class="w-4 h-4" />
             </button>
@@ -174,7 +176,7 @@ async function handleDelete(id: number) {
         <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl p-6 space-y-4">
           <div class="flex items-center justify-between pb-3 border-b border-slate-800">
             <h3 class="text-base font-semibold text-white">
-              {{ editingDockId ? 'Editar Doca' : 'Cadastrar Nova Doca' }}
+              {{ editingDockId ? t('docks.editDock') : t('docks.createDock') }}
             </h3>
             <button @click="isModalOpen = false" class="text-slate-400 hover:text-white">
               <X class="w-5 h-5" />
@@ -183,7 +185,7 @@ async function handleDelete(id: number) {
 
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1">Código da Doca</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('docks.code') }}</label>
               <input
                 v-model="formCode"
                 type="text"
@@ -193,7 +195,7 @@ async function handleDelete(id: number) {
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1">Nome / Descrição</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('docks.name') }}</label>
               <input
                 v-model="formName"
                 type="text"
@@ -205,37 +207,37 @@ async function handleDelete(id: number) {
 
             <div class="grid grid-cols-2 gap-3">
               <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Tipo de Doca</label>
+                <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('docks.type') }}</label>
                 <select
                   v-model="formType"
                   class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white"
                 >
-                  <option :value="DockType.DRY">Carga Seca (DRY)</option>
-                  <option :value="DockType.REFRIGERATED">Frigorificada (REFRIGERATED)</option>
-                  <option :value="DockType.BULK">Granel (BULK)</option>
-                  <option :value="DockType.HAZARDOUS">Perigosa (HAZARDOUS)</option>
+                  <option :value="DockType.DRY">{{ t('docks.types.dry') }}</option>
+                  <option :value="DockType.REFRIGERATED">{{ t('docks.types.refrigerated') }}</option>
+                  <option :value="DockType.BULK">{{ t('docks.types.bulk') }}</option>
+                  <option :value="DockType.HAZARDOUS">{{ t('docks.types.hazardous') }}</option>
                 </select>
               </div>
 
               <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Status Operacional</label>
+                <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('docks.status') }}</label>
                 <select
                   v-model="formStatus"
                   class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white"
                 >
-                  <option :value="DockStatus.AVAILABLE">Disponível</option>
-                  <option :value="DockStatus.OCCUPIED">Ocupada</option>
-                  <option :value="DockStatus.MAINTENANCE">Manutenção</option>
+                  <option :value="DockStatus.AVAILABLE">{{ t('docks.available') }}</option>
+                  <option :value="DockStatus.OCCUPIED">{{ t('docks.occupied') }}</option>
+                  <option :value="DockStatus.MAINTENANCE">{{ t('docks.maintenance') }}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-300 mb-1">Observações Técnicas</label>
+              <label class="block text-xs font-medium text-slate-300 mb-1">{{ t('docks.notes') }}</label>
               <textarea
                 v-model="formNotes"
                 rows="2"
-                placeholder="Ex: Equipamentos de nivelamento, altura máxima..."
+                :placeholder="t('docks.notesPlaceholder')"
                 class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white resize-none"
               />
             </div>
@@ -246,13 +248,13 @@ async function handleDelete(id: number) {
                 @click="isModalOpen = false"
                 class="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white"
               >
-                Cancelar
+                {{ t('common.cancel') }}
               </button>
               <button
                 type="submit"
                 class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-white"
               >
-                Salvar Doca
+                {{ t('docks.saveDock') }}
               </button>
             </div>
           </form>

@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { UnloadingSchedule, ScheduleStage, Dock } from '../../types';
 import StageBadge from '../common/StageBadge.vue';
+import { useI18n } from '../../i18n';
 import { X, ArrowRight, AlertTriangle } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -14,43 +15,45 @@ const emit = defineEmits<{
   (e: 'submit', payload: { stage: ScheduleStage; reason?: string; notes?: string; dockId?: number }): void;
 }>();
 
+const { t } = useI18n();
+
 const selectedStage = ref<ScheduleStage>(props.schedule.currentStage);
 const reason = ref('');
 const notes = ref('');
 const selectedDockId = ref<number | undefined>(props.schedule.dockId || undefined);
 
-const availableStages = [
-  { stage: ScheduleStage.IN_TRANSIT, label: 'Em Trânsito', desc: 'Veículo em rota de entrega' },
-  { stage: ScheduleStage.STOPPED, label: 'Parado (Alerta)', desc: 'Parada por trânsito, defeito, fiscalização ou descanso' },
-  { stage: ScheduleStage.WAITING_YARD, label: 'No Pátio / Fila', desc: 'Chegou na portaria e aguarda liberação' },
-  { stage: ScheduleStage.AT_DOCK, label: 'Encostado na Doca', desc: 'Posicionado para conferência e descarga' },
-  { stage: ScheduleStage.UNLOADING, label: 'Em Descarga', desc: 'Descarregamento em andamento' },
-  { stage: ScheduleStage.COMPLETED, label: 'Finalizado / Liberado', desc: 'Descarga finalizada, veículo liberado' },
-  { stage: ScheduleStage.CANCELLED, label: 'Cancelado', desc: 'Janela cancelada ou reagendada' },
-];
+const availableStages = computed(() => [
+  { stage: ScheduleStage.IN_TRANSIT, label: t('stages.inTransit'), desc: t('stages.descInTransit') },
+  { stage: ScheduleStage.STOPPED, label: t('stages.stoppedAlert'), desc: t('stages.descStopped') },
+  { stage: ScheduleStage.WAITING_YARD, label: t('stages.waitingYard'), desc: t('stages.descWaitingYard') },
+  { stage: ScheduleStage.AT_DOCK, label: t('stages.docked'), desc: t('stages.descAtDock') },
+  { stage: ScheduleStage.UNLOADING, label: t('stages.unloading'), desc: t('stages.descUnloading') },
+  { stage: ScheduleStage.COMPLETED, label: t('stages.completedReleased'), desc: t('stages.descCompleted') },
+  { stage: ScheduleStage.CANCELLED, label: t('stages.cancelled'), desc: t('stages.descCancelled') },
+]);
 
 const commonReasons = computed(() => {
   if (selectedStage.value === ScheduleStage.STOPPED) {
     return [
-      'Congestionamento intenso na rodovia',
-      'Problema mecânico / Pneu furado',
-      'Parada regulamentar para descanso / alimentação',
-      'Retenção em posto de pesagem / fiscalização',
-      'Aguardando liberação de documentação fiscal',
+      t('transitionModal.reasons.traffic'),
+      t('transitionModal.reasons.mechanical'),
+      t('transitionModal.reasons.rest'),
+      t('transitionModal.reasons.weighStation'),
+      t('transitionModal.reasons.documents'),
     ];
   }
   if (selectedStage.value === ScheduleStage.WAITING_YARD) {
     return [
-      'Aguardando liberação de doca designada',
-      'Triagem de documentos na portaria',
-      'Conferência de termometria / lacre',
+      t('transitionModal.reasons.dockWait'),
+      t('transitionModal.reasons.gateScreening'),
+      t('transitionModal.reasons.temperatureCheck'),
     ];
   }
   if (selectedStage.value === ScheduleStage.UNLOADING) {
     return [
-      'Início padrão de descarga paletizada',
-      'Descarga com 2 operadores e paleteira',
-      'Descarga manual com conferência cega',
+      t('transitionModal.reasons.standardUnload'),
+      t('transitionModal.reasons.palletOperators'),
+      t('transitionModal.reasons.manualBlind'),
     ];
   }
   return [];
@@ -77,7 +80,7 @@ function handleSubmit() {
       <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/80">
         <div>
           <h2 class="text-base font-semibold text-white flex items-center gap-2">
-            Atualizar Etapa do Caminhão
+            {{ t('transitionModal.title') }}
           </h2>
           <p class="text-xs text-slate-400 mt-0.5">
             {{ schedule.code }} • {{ schedule.truck?.plate }} ({{ schedule.truck?.driverName }})
@@ -95,14 +98,14 @@ function handleSubmit() {
       <div class="p-5 overflow-y-auto space-y-4">
         <!-- Current Stage Banner -->
         <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-700/50">
-          <div class="text-xs text-slate-400">Etapa Atual:</div>
+          <div class="text-xs text-slate-400">{{ t('transitionModal.currentStageLabel') }}</div>
           <StageBadge :stage="schedule.currentStage" show-dot />
         </div>
 
         <!-- Stage Selection Grid -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-2">
-            Selecione a Nova Etapa:
+            {{ t('transitionModal.selectNewStage') }}
           </label>
           <div class="grid grid-cols-1 gap-2">
             <button
@@ -141,21 +144,21 @@ function handleSubmit() {
         >
           <AlertTriangle class="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
           <div>
-            <span class="font-semibold block">Atenção para tempo parado:</span>
-            Informar o motivo da parada permite rastrear gargalos logísticos e calcular o tempo ocioso com precisão.
+            <span class="font-semibold block">{{ t('transitionModal.stoppedAlertTitle') }}</span>
+            {{ t('transitionModal.stoppedAlertDesc') }}
           </div>
         </div>
 
         <!-- Motivo / Reason -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">
-            Motivo / Justificativa
-            <span v-if="selectedStage === ScheduleStage.STOPPED" class="text-rose-400">* (Recomendado)</span>
+            {{ t('transitionModal.reasonLabel') }}
+            <span v-if="selectedStage === ScheduleStage.STOPPED" class="text-rose-400">{{ t('transitionModal.reasonRecommended') }}</span>
           </label>
           <input
             v-model="reason"
             type="text"
-            placeholder="Ex: Congestionamento na rodovia, pneu furado, aguardando liberação..."
+            :placeholder="t('transitionModal.reasonPlaceholder')"
             class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
           />
 
@@ -176,13 +179,13 @@ function handleSubmit() {
         <!-- Doca Selection (if applicable) -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">
-            Designar ou Alterar Doca
+            {{ t('transitionModal.dockLabel') }}
           </label>
           <select
             v-model="selectedDockId"
             class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
           >
-            <option :value="undefined">Nenhuma doca vinculada</option>
+            <option :value="undefined">{{ t('transitionModal.dockNone') }}</option>
             <option
               v-for="dock in docks"
               :key="dock.id"
@@ -196,12 +199,12 @@ function handleSubmit() {
         <!-- Observações Adicionais -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">
-            Observações Adicionais
+            {{ t('transitionModal.notesLabel') }}
           </label>
           <textarea
             v-model="notes"
             rows="2"
-            placeholder="Anotações internas da operação..."
+            :placeholder="t('transitionModal.notesPlaceholder')"
             class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors resize-none"
           />
         </div>
@@ -214,14 +217,14 @@ function handleSubmit() {
           @click="emit('close')"
           class="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
         >
-          Cancelar
+          {{ t('common.cancel') }}
         </button>
         <button
           type="button"
           @click="handleSubmit"
           class="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all"
         >
-          <span>Confirmar Transição</span>
+          <span>{{ t('transitionModal.submitBtn') }}</span>
           <ArrowRight class="w-3.5 h-3.5" />
         </button>
       </div>

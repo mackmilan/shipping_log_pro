@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Truck, Dock, SchedulePriority, ScheduleStage } from '../../types';
+import { useI18n } from '../../i18n';
 import { X, CalendarPlus, Truck as TruckIcon } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -12,6 +13,8 @@ const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'submit', payload: any): void;
 }>();
+
+const { t } = useI18n();
 
 // Form state
 const truckId = ref<number | ''>(props.trucks[0]?.id || '');
@@ -38,7 +41,7 @@ const scheduledEndTime = ref(toDateTimeLocal(endDefault));
 
 function handleSubmit() {
   if (!truckId.value || !cargoDescription.value || !scheduledStartTime.value || !scheduledEndTime.value) {
-    alert('Preencha os campos obrigatórios (Caminhão, Descrição da carga e Janela de horário)');
+    alert(t('newScheduleModal.fillRequired'));
     return;
   }
 
@@ -68,8 +71,8 @@ function handleSubmit() {
             <CalendarPlus class="w-4 h-4" />
           </div>
           <div>
-            <h2 class="text-base font-semibold text-white">Nova Janela de Descarga</h2>
-            <p class="text-xs text-slate-400">Agendar horário e alocação de caminhão na doca</p>
+            <h2 class="text-base font-semibold text-white">{{ t('newScheduleModal.title') }}</h2>
+            <p class="text-xs text-slate-400">{{ t('newScheduleModal.subtitle') }}</p>
           </div>
         </div>
         <button
@@ -85,14 +88,14 @@ function handleSubmit() {
         <!-- Caminhão -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">
-            Caminhão / Placa *
+            {{ t('newScheduleModal.truckSelect') }}
           </label>
           <select
             v-model="truckId"
             required
             class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
           >
-            <option value="" disabled>Selecione um caminhão cadastrado</option>
+            <option value="" disabled>{{ t('newScheduleModal.truckSelectPlaceholder') }}</option>
             <option
               v-for="truck in trucks"
               :key="truck.id"
@@ -107,7 +110,7 @@ function handleSubmit() {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">
-              Início Planejado da Janela *
+              {{ t('newScheduleModal.startWindow') }}
             </label>
             <input
               v-model="scheduledStartTime"
@@ -119,7 +122,7 @@ function handleSubmit() {
 
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">
-              Fim Planejado da Janela *
+              {{ t('newScheduleModal.endWindow') }}
             </label>
             <input
               v-model="scheduledEndTime"
@@ -134,13 +137,13 @@ function handleSubmit() {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">
-              Doca Designada (Opcional)
+              {{ t('newScheduleModal.dockAssigned') }}
             </label>
             <select
               v-model="dockId"
               class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
             >
-              <option value="">A definir na chegada</option>
+              <option value="">{{ t('newScheduleModal.dockToDefine') }}</option>
               <option
                 v-for="dock in docks"
                 :key="dock.id"
@@ -153,16 +156,16 @@ function handleSubmit() {
 
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">
-              Prioridade da Carga
+              {{ t('newScheduleModal.priority') }}
             </label>
             <select
               v-model="priority"
               class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
             >
-              <option :value="SchedulePriority.LOW">Baixa</option>
-              <option :value="SchedulePriority.NORMAL">Normal</option>
-              <option :value="SchedulePriority.HIGH">Alta</option>
-              <option :value="SchedulePriority.URGENT">Urgente</option>
+              <option :value="SchedulePriority.LOW">{{ t('priorities.low') }}</option>
+              <option :value="SchedulePriority.NORMAL">{{ t('priorities.normal') }}</option>
+              <option :value="SchedulePriority.HIGH">{{ t('priorities.high') }}</option>
+              <option :value="SchedulePriority.URGENT">{{ t('priorities.urgent') }}</option>
             </select>
           </div>
         </div>
@@ -170,28 +173,28 @@ function handleSubmit() {
         <!-- Etapa Inicial -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">
-            Status / Etapa Inicial
+            {{ t('newScheduleModal.initialStage') }}
           </label>
           <select
             v-model="initialStage"
             class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
           >
-            <option :value="ScheduleStage.SCHEDULED">Agendado (Ainda não saiu)</option>
-            <option :value="ScheduleStage.IN_TRANSIT">Em Trânsito (Caminhão já em rota)</option>
-            <option :value="ScheduleStage.WAITING_YARD">No Pátio / Fila (Já chegou na portaria)</option>
+            <option :value="ScheduleStage.SCHEDULED">{{ t('stages.descScheduled') }}</option>
+            <option :value="ScheduleStage.IN_TRANSIT">{{ t('stages.descInTransitOption') }}</option>
+            <option :value="ScheduleStage.WAITING_YARD">{{ t('stages.descWaitingYardOption') }}</option>
           </select>
         </div>
 
         <!-- Descrição da Carga -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">
-            Descrição da Carga *
+            {{ t('newScheduleModal.cargoDescription') }}
           </label>
           <input
             v-model="cargoDescription"
             type="text"
             required
-            placeholder="Ex: Peças automotivas, alimentos perecíveis, sacarias..."
+            :placeholder="t('newScheduleModal.cargoPlaceholder')"
             class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
           />
         </div>
@@ -200,32 +203,32 @@ function handleSubmit() {
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">
-              Peso da Carga (Kg)
+              {{ t('newScheduleModal.cargoWeight') }}
             </label>
             <input
               v-model="cargoWeightKg"
               type="number"
               step="any"
-              placeholder="Ex: 15000"
+              :placeholder="t('newScheduleModal.weightPlaceholder')"
               class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
             />
           </div>
 
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">
-              Nota Fiscal (NF-e)
+              {{ t('newScheduleModal.invoice') }}
             </label>
             <input
               v-model="invoiceNumber"
               type="text"
-              placeholder="Ex: NF-e 49201"
+              :placeholder="t('newScheduleModal.invoicePlaceholder')"
               class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
             />
           </div>
 
           <div>
             <label class="block text-xs font-medium text-slate-300 mb-1">
-              Tempo Estimado (min)
+              {{ t('newScheduleModal.estimatedDuration') }}
             </label>
             <input
               v-model="estimatedDurationMinutes"
@@ -239,12 +242,12 @@ function handleSubmit() {
         <!-- Observações -->
         <div>
           <label class="block text-xs font-medium text-slate-300 mb-1">
-            Observações / Instruções Especiais
+            {{ t('newScheduleModal.notes') }}
           </label>
           <textarea
             v-model="notes"
             rows="2"
-            placeholder="Ex: Exige conferência manual de lacre, paletização padrão PBR..."
+            :placeholder="t('newScheduleModal.notesPlaceholder')"
             class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors resize-none"
           />
         </div>
@@ -256,13 +259,13 @@ function handleSubmit() {
             @click="emit('close')"
             class="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
-            Cancelar
+            {{ t('common.cancel') }}
           </button>
           <button
             type="submit"
             class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-white shadow-lg shadow-emerald-500/20 transition-all"
           >
-            Criar Janela de Descarga
+            {{ t('newScheduleModal.submitBtn') }}
           </button>
         </div>
       </form>
