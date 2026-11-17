@@ -12,6 +12,7 @@ import { SchedulePriority, ScheduleStage } from '../common/enums/stage.enum';
 import { Truck } from './truck.entity';
 import { Dock } from './dock.entity';
 import { StageLog } from './stage-log.entity';
+import { User } from './user.entity';
 
 @Entity('unloading_schedules')
 export class UnloadingSchedule {
@@ -34,6 +35,13 @@ export class UnloadingSchedule {
   @ManyToOne(() => Dock, (dock) => dock.schedules, { eager: true, nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'dockId' })
   dock: Dock;
+
+  @Column({ nullable: true })
+  driverId: number;
+
+  @ManyToOne(() => User, { eager: true, nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'driverId' })
+  driver: User;
 
   @Column({ type: 'datetime' })
   scheduledStartTime: Date;
@@ -76,6 +84,15 @@ export class UnloadingSchedule {
 
   @Column({ type: 'text', nullable: true })
   notes: string;
+
+  @Column({ type: 'float', nullable: true })
+  lastLatitude: number;
+
+  @Column({ type: 'float', nullable: true })
+  lastLongitude: number;
+
+  @Column({ type: 'text', nullable: true })
+  lastLocationName: string;
 
   @OneToMany(() => StageLog, (log) => log.schedule, { cascade: true })
   stageLogs: StageLog[];

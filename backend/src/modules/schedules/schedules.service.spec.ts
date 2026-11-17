@@ -144,6 +144,117 @@ describe('SchedulesService', () => {
         }),
       );
     });
+
+    it('should record location and images when updating stage', async () => {
+      const existingLog: any = {
+        id: 1,
+        stage: ScheduleStage.IN_TRANSIT,
+        startedAt: new Date(Date.now() - 10 * 60 * 1000),
+        endedAt: null,
+      };
+
+      const existingSchedule: any = {
+        id: 10,
+        code: 'SCH-TEST',
+        currentStage: ScheduleStage.IN_TRANSIT,
+        stageLogs: [existingLog],
+      };
+
+      mockScheduleRepo.findOne.mockResolvedValue(existingSchedule);
+
+      await service.updateStage(
+        10,
+        {
+          stage: ScheduleStage.STOPPED,
+          reason: 'Troca de pneu',
+          latitude: -23.55,
+          longitude: -46.63,
+          locationName: 'KM 50 Rodovia',
+          images: [
+            {
+              url: 'data:image/png;base64,abc',
+              caption: 'Pneu avariado',
+            },
+          ],
+        },
+        3,
+      );
+
+      expect(mockStageLogRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: -23.55,
+          longitude: -46.63,
+          locationName: 'KM 50 Rodovia',
+          images: expect.arrayContaining([
+            expect.objectContaining({ caption: 'Pneu avariado' }),
+          ]),
+        }),
+      );
+      expect(existingSchedule.lastLatitude).toBe(-23.55);
+      expect(existingSchedule.lastLongitude).toBe(-46.63);
+    });
+  });
+
+  describe('updateLocation', () => {
+    it('should update location on schedule and active stage log', async () => {
+      const activeLog: any = {
+        id: 5,
+        stage: ScheduleStage.IN_TRANSIT,
+        startedAt: new Date(),
+        endedAt: null,
+      };
+      const existingSchedule: any = {
+        id: 10,
+        stageLogs: [activeLog],
+      };
+
+      mockScheduleRepo.findOne.mockResolvedValue(existingSchedule);
+
+      await service.updateLocation(10, {
+        latitude: -23.123,
+        longitude: -46.456,
+        locationName: 'Posto de Gasolina Graal',
+      });
+
+      expect(existingSchedule.lastLatitude).toBe(-23.123);
+      expect(existingSchedule.lastLongitude).toBe(-46.456);
+      expect(activeLog.latitude).toBe(-23.123);
+      expect(activeLog.locationName).toBe('Posto de Gasolina Graal');
+      expect(mockStageLogRepo.save).toHaveBeenCalledWith(activeLog);
+      expect(mockScheduleRepo.save).toHaveBeenCalledWith(existingSchedule);
+    });
+  });
+
+  describe('addStageImage', () => {
+    it('should add image to current active stage log', async () => {
+      const activeLog: any = {
+        id: 5,
+        stage: ScheduleStage.WAITING_YARD,
+        startedAt: new Date(),
+        endedAt: null,
+        images: [],
+      };
+      const existingSchedule: any = {
+        id: 10,
+        currentStage: ScheduleStage.WAITING_YARD,
+        stageLogs: [activeLog],
+      };
+
+      mockScheduleRepo.findOne.mockResolvedValue(existingSchedule);
+
+      await service.addStageImage(10, {
+        url: '/uploads/canhoto.jpg',
+        caption: 'Canhoto da NF assinado',
+      });
+
+      expect(activeLog.images.length).toBe(1);
+      expect(activeLog.images[0]).toMatchObject({
+        url: '/uploads/canhoto.jpg',
+        caption: 'Canhoto da NF assinado',
+        stage: ScheduleStage.WAITING_YARD,
+      });
+      expect(mockStageLogRepo.save).toHaveBeenCalledWith(activeLog);
+    });
   });
 
   describe('getMetrics', () => {

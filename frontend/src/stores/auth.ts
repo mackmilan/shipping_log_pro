@@ -16,6 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isOperator = computed(
     () => user.value?.role === UserRole.OPERATOR || user.value?.role === UserRole.ADMIN,
   );
+  const isDriver = computed(() => user.value?.role === UserRole.DRIVER);
   const isUser = computed(() => user.value?.role === UserRole.USER);
 
   async function login(email: string, pass: string) {
@@ -62,6 +63,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     isAdmin,
     isOperator,
+    isDriver,
     isUser,
     login,
     logout,

@@ -12,7 +12,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'submit', payload: { stage: ScheduleStage; reason?: string; notes?: string; dockId?: number }): void;
+  (e: 'submit', payload: { stage: ScheduleStage; reason?: string; notes?: string; dockId?: number; locationName?: string }): void;
 }>();
 
 const { t } = useI18n();
@@ -20,6 +20,7 @@ const { t } = useI18n();
 const selectedStage = ref<ScheduleStage>(props.schedule.currentStage);
 const reason = ref('');
 const notes = ref('');
+const locationName = ref(props.schedule.lastLocationName || '');
 const selectedDockId = ref<number | undefined>(props.schedule.dockId || undefined);
 
 const availableStages = computed(() => [
@@ -69,6 +70,7 @@ function handleSubmit() {
     reason: reason.value.trim() || undefined,
     notes: notes.value.trim() || undefined,
     dockId: selectedDockId.value || undefined,
+    locationName: locationName.value.trim() || undefined,
   });
 }
 </script>
@@ -174,6 +176,19 @@ function handleSubmit() {
               + {{ r }}
             </button>
           </div>
+        </div>
+
+        <!-- Localização / Ponto de Referência -->
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">
+            {{ t('transitionModal.locationLabel') }}
+          </label>
+          <input
+            v-model="locationName"
+            type="text"
+            :placeholder="t('transitionModal.locationPlaceholder')"
+            class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+          />
         </div>
 
         <!-- Doca Selection (if applicable) -->

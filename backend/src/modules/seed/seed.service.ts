@@ -36,10 +36,7 @@ export class SeedService implements OnApplicationBootstrap {
   }
 
   private async seedUsers() {
-    const userCount = await this.userRepo.count();
-    if (userCount > 0) return;
-
-    this.logger.log('🌱 Inicializando usuários padrão locais...');
+    this.logger.log('🌱 Verificando usuários padrão locais...');
 
     const defaultUsers = [
       {
@@ -63,12 +60,22 @@ export class SeedService implements OnApplicationBootstrap {
         role: UserRole.USER,
         active: true,
       },
+      {
+        name: 'Carlos Santos (Motorista)',
+        email: 'motorista@shippinglog.local',
+        password: await bcrypt.hash('motorista123', 10),
+        role: UserRole.DRIVER,
+        active: true,
+      },
     ];
 
     for (const u of defaultUsers) {
-      await this.userRepo.save(this.userRepo.create(u));
+      const existing = await this.userRepo.findOne({ where: { email: u.email } });
+      if (!existing) {
+        await this.userRepo.save(this.userRepo.create(u));
+        this.logger.log(`✅ Usuário padrão criado: ${u.email}`);
+      }
     }
-    this.logger.log('✅ Usuários padrão criados com sucesso.');
   }
 
   private async seedDocks() {
@@ -163,6 +170,7 @@ export class SeedService implements OnApplicationBootstrap {
 
     const admin = await this.userRepo.findOne({ where: { role: UserRole.ADMIN } });
     const operator = await this.userRepo.findOne({ where: { role: UserRole.OPERATOR } });
+    const driver = await this.userRepo.findOne({ where: { role: UserRole.DRIVER } });
     const trucks = await this.truckRepo.find();
     const docks = await this.dockRepo.find();
 
@@ -176,6 +184,7 @@ export class SeedService implements OnApplicationBootstrap {
         code: 'AGD-26101',
         truckId: trucks[0].id,
         dockId: docks[0].id,
+        driverId: driver?.id,
         scheduledStartTime: sch1Start,
         scheduledEndTime: sch1End,
         currentStage: ScheduleStage.STOPPED,
@@ -185,6 +194,9 @@ export class SeedService implements OnApplicationBootstrap {
         invoiceNumber: 'NF-e 882194',
         estimatedDurationMinutes: 60,
         notes: 'Atenção: motorista avisou sobre paralisação temporária',
+        lastLatitude: -24.4967,
+        lastLongitude: -47.8447,
+        lastLocationName: 'BR-116 km 220, Registro - SP',
       }),
     );
 
@@ -199,7 +211,10 @@ export class SeedService implements OnApplicationBootstrap {
         endedAt: sch1StoppedStart,
         durationMinutes: 75,
         reason: 'Saída da fábrica origem',
-        recordedById: operator?.id,
+        recordedById: driver?.id || operator?.id,
+        latitude: -23.6821,
+        longitude: -46.6204,
+        locationName: 'Rodovia dos Imigrantes, KM 12',
       }),
       this.stageLogRepo.create({
         scheduleId: sch1.id,
@@ -209,7 +224,22 @@ export class SeedService implements OnApplicationBootstrap {
         durationMinutes: 0,
         reason: 'Congestionamento severo e retenção policial na BR-116 km 220',
         notes: 'Previsão de retomada de trânsito em 30 minutos',
-        recordedById: operator?.id,
+        recordedById: driver?.id || operator?.id,
+        latitude: -24.4967,
+        longitude: -47.8447,
+        locationName: 'BR-116 km 220, Registro - SP',
+        images: [
+          {
+            id: 'img_seed_1',
+            url: 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=600&q=80',
+            caption: 'Foto do caminhão parado no acostamento por lentidão na pista',
+            stage: ScheduleStage.STOPPED,
+            capturedAt: new Date(now.getTime() - 40 * 60 * 1000).toISOString(),
+            latitude: -24.4967,
+            longitude: -47.8447,
+            locationName: 'BR-116 km 220, Registro - SP',
+          },
+        ],
       }),
     ]);
 

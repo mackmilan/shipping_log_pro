@@ -87,10 +87,18 @@ shipping_log_pro/
 
 5. **Internacionalização (i18n) e Troca de Idioma em Tempo Real**:
    - Suporte bilíngue completo: **Português Brasileiro (`pt-BR`)** e **Inglês Internacional (`en`)**.
-   - Cobertura em todas as telas (Login, Dashboard, Janelas de Descarga, Docas, Caminhões e Usuários), modais de ação, formulários, tabelas e badges de status/prioridade.
+   - Cobertura em todas as telas (Login, Dashboard, Janelas de Descarga, Docas, Caminhões, Tela do Motorista e Usuários), modais de ação, formulários, tabelas e badges de status/prioridade.
    - Alternador de idioma instantâneo na barra superior e na tela de login (🇧🇷 PT-BR e 🌐 EN).
    - Preferência persistida automaticamente no navegador via `localStorage` (`shipping_log_locale`).
    - Implementação nativa reativa e tipada no Vue 3 via Composition API, sem sobrecarga de dependências externas.
+
+6. **Tela Operacional Simplificada para Motoristas (`/driver`)**:
+   - Interface mobile-first ergonômica com botões grandes de toque rápido.
+   - Seleção de viagem/carga ativa com detalhes do caminhão, doca, janela e carga.
+   - Avanço simplificado de etapas (Iniciar Trânsito, Reportar Parada com motivos predefinidos, Chegada ao Pátio, Encoste na Doca, Início de Descarga e Finalização).
+   - Rastreamento e envio de localização GPS do dispositivo em tempo real com link para Google Maps.
+   - Envio de fotos e comprovantes para cada etapa (canhoto assinado, foto do lacre, foto da carga, odômetro, avarias) com câmera direta do celular ou arquivo.
+   - Galeria de imagens por etapa e visualizador ampliado (lightbox), visível tanto para o motorista quanto para os operadores e administradores na linha do tempo.
 
 ---
 
@@ -102,6 +110,7 @@ O sistema possui autenticação local baseada em tokens **JWT** e senhas criptog
 |---|---|---|
 | **Administrador (`ADMIN`)** | Gestão estratégica e administrativa | Acesso irrestrito a todos os módulos, incluindo criação e edição de usuários, exclusão de dados e configurações globais. |
 | **Operador (`OPERATOR`)** | Operação de pátio, portaria e docas | Criação de janelas de descarga, alteração de status/etapas dos caminhões, inserção de motivos de paradas, alocação de docas e cadastro de veículos. |
+| **Motorista (`DRIVER`)** | Operação simplificada de campo e entrega | Acesso dedicado à tela operacional simplificada (`/driver`), avanço rápido de etapas, captura e envio de localização GPS e upload de imagens/comprovantes de cada etapa. |
 | **Usuário (`USER`)** | Visualizador / Consulta | Acompanhamento do dashboard, consulta da fila de janelas e histórico de tempos em modo somente leitura (botões de edição e avanço desabilitados). |
 
 ---
@@ -174,9 +183,10 @@ O sistema inicializa automaticamente dados demonstrativos e 3 usuários padrão 
 |---|---|---|
 | **Administrador** | `admin@shippinglog.local` | `admin123` |
 | **Operador** | `operador@shippinglog.local` | `operador123` |
+| **Motorista** | `motorista@shippinglog.local` | `motorista123` |
 | **Usuário (Leitura)** | `usuario@shippinglog.local` | `user123` |
 
-> 💡 *Dica:* Na tela de login, há botões de **"Acesso Rápido por Perfil (Demo)"** para entrar com 1 clique em qualquer um dos três perfis.
+> 💡 *Dica:* Na tela de login, há botões de **"Acesso Rápido por Perfil (Demo)"** para entrar com 1 clique em qualquer um dos perfis.
 
 ---
 

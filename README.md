@@ -142,6 +142,7 @@ The application enforces a granular 3-tier Role-Based Access Control system:
 |---|---|---|
 | **`ADMIN`** | Operations Director / Systems Admin | **Unrestricted Access:** Create/edit/delete users, manage docks and fleets, delete records, modify system configurations, and manage schedules. |
 | **`OPERATOR`** | Yard Supervisor / Gate Controller / Dock Master | **Operational Management:** Create schedules, advance or alter truck stages, submit downtime stop reasons, allocate docks, and register new trucks/drivers. |
+| **`DRIVER`** | Field Truck Driver / Carrier Operator | **Simplified Operations Screen (`/driver`):** One-tap stage progression, real-time GPS location reporting, and photo capture/receipt uploads for each stage. |
 | **`USER`** | Read-Only Analyst / Logistics Viewer | **Read-Only Mode:** Access the dashboard, browse schedule lists and Kanban board, review timeline chronometry, and view dock occupancy. All edit/advance action buttons are disabled. |
 
 ---
@@ -154,6 +155,7 @@ On initial application startup, the backend automatically seeds a demo environme
 |---|---|---|---|
 | **Administrator** | `admin@shippinglog.local` | `admin123` | Full access, user management & deletion rights |
 | **Operator** | `operador@shippinglog.local` | `operador123` | Operational flow, stage updates & stop reasons |
+| **Driver** | `motorista@shippinglog.local` | `motorista123` | Simplified driver operations, GPS & photo upload |
 | **User (Viewer)** | `usuario@shippinglog.local` | `user123` | Read-only consultation mode |
 
 > 💡 **Quick Demo Login:** On the login screen, convenient **"Quick Demo Access"** buttons allow you to authenticate with any role in one click without typing credentials.

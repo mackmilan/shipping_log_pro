@@ -71,6 +71,25 @@ describe('useAuthStore', () => {
     expect(store.isUser).toBe(false);
   });
 
+  it('evaluates driver role correctly', () => {
+    const store = useAuthStore();
+    store.token = 'dummy-token';
+    store.user = {
+      id: 4,
+      name: 'Carlos Motorista',
+      email: 'motorista@shippinglog.local',
+      role: UserRole.DRIVER,
+      active: true,
+      createdAt: '',
+    };
+
+    expect(store.isAuthenticated).toBe(true);
+    expect(store.isAdmin).toBe(false);
+    expect(store.isOperator).toBe(false);
+    expect(store.isDriver).toBe(true);
+    expect(store.isUser).toBe(false);
+  });
+
   it('evaluates regular user role correctly', () => {
     const store = useAuthStore();
     store.token = 'dummy-token';

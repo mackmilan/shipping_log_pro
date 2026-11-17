@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   UserCheck,
+  Compass,
 } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -35,6 +36,12 @@ const roleBadge = computed(() => {
         label: t('roles.operator'),
         class: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
         icon: ShieldAlert,
+      };
+    case UserRole.DRIVER:
+      return {
+        label: t('roles.driver'),
+        class: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        icon: Compass,
       };
     default:
       return {
@@ -70,6 +77,12 @@ const navItems = computed(() => {
       path: '/trucks',
       icon: Truck,
       description: t('nav.trucksDesc'),
+    },
+    {
+      name: t('nav.driverView'),
+      path: '/driver',
+      icon: Compass,
+      description: t('nav.driverViewDesc'),
     },
   ];
 

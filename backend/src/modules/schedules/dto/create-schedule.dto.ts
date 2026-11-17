@@ -23,6 +23,11 @@ export class CreateScheduleDto {
   @IsNumber()
   dockId?: number;
 
+  @ApiPropertyOptional({ example: 4, description: 'ID do motorista designado (Usuário Motorista)' })
+  @IsOptional()
+  @IsNumber()
+  driverId?: number;
+
   @ApiProperty({ example: '2026-11-17T08:00:00Z', description: 'Início da janela agendada' })
   @IsDateString()
   scheduledStartTime: string;

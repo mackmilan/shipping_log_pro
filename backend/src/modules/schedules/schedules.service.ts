@@ -102,6 +102,7 @@ export class SchedulesService {
       .createQueryBuilder('schedule')
       .leftJoinAndSelect('schedule.truck', 'truck')
       .leftJoinAndSelect('schedule.dock', 'dock')
+      .leftJoinAndSelect('schedule.driver', 'driver')
       .leftJoinAndSelect('schedule.stageLogs', 'stageLogs')
       .leftJoinAndSelect('stageLogs.recordedBy', 'recordedBy')
       .orderBy('schedule.scheduledStartTime', 'DESC');
@@ -112,6 +113,10 @@ export class SchedulesService {
 
     if (filter.priority) {
       query.andWhere('schedule.priority = :priority', { priority: filter.priority });
+    }
+
+    if (filter.driverId) {
+      query.andWhere('schedule.driverId = :driverId', { driverId: filter.driverId });
     }
 
     if (filter.search) {
@@ -129,7 +134,7 @@ export class SchedulesService {
   async findOne(id: number) {
     const schedule = await this.scheduleRepository.findOne({
       where: { id },
-      relations: ['truck', 'dock', 'stageLogs', 'stageLogs.recordedBy'],
+      relations: ['truck', 'dock', 'driver', 'stageLogs', 'stageLogs.recordedBy'],
     });
 
     if (!schedule) {
@@ -166,6 +171,7 @@ export class SchedulesService {
       code,
       truckId: dto.truckId,
       dockId: dto.dockId,
+      driverId: dto.driverId,
       scheduledStartTime: new Date(dto.scheduledStartTime),
       scheduledEndTime: new Date(dto.scheduledEndTime),
       currentStage: initialStage,
@@ -256,6 +262,14 @@ export class SchedulesService {
       }
     }
 
+    if (dto.latitude !== undefined && dto.longitude !== undefined) {
+      schedule.lastLatitude = dto.latitude;
+      schedule.lastLongitude = dto.longitude;
+    }
+    if (dto.locationName) {
+      schedule.lastLocationName = dto.locationName;
+    }
+
     await this.scheduleRepository.save(schedule);
 
     // 3. Create new stage log
@@ -270,9 +284,121 @@ export class SchedulesService {
       durationMinutes: 0,
       reason: dto.reason,
       notes: dto.notes,
+      latitude: dto.latitude,
+      longitude: dto.longitude,
+      locationName: dto.locationName,
+      images: dto.images || [],
       recordedById: userId,
     });
     await this.stageLogRepository.save(newLog);
+
+    return this.findOne(schedule.id);
+  }
+
+  async updateLocation(
+    id: number,
+    dto: { latitude: number; longitude: number; locationName?: string },
+    userId?: number,
+  ) {
+    const schedule = await this.scheduleRepository.findOne({
+      where: { id },
+      relations: ['stageLogs'],
+    });
+
+    if (!schedule) {
+      throw new NotFoundException(`Agendamento #${id} não encontrado`);
+    }
+
+    schedule.lastLatitude = dto.latitude;
+    schedule.lastLongitude = dto.longitude;
+    if (dto.locationName) {
+      schedule.lastLocationName = dto.locationName;
+    }
+    await this.scheduleRepository.save(schedule);
+
+    const activeLog = (schedule.stageLogs || []).find((log) => !log.endedAt);
+    if (activeLog) {
+      activeLog.latitude = dto.latitude;
+      activeLog.longitude = dto.longitude;
+      if (dto.locationName) {
+        activeLog.locationName = dto.locationName;
+      }
+      await this.stageLogRepository.save(activeLog);
+    }
+
+    return this.findOne(schedule.id);
+  }
+
+  async addStageImage(
+    id: number,
+    dto: {
+      url: string;
+      caption?: string;
+      stage?: ScheduleStage;
+      latitude?: number;
+      longitude?: number;
+      locationName?: string;
+    },
+    userId?: number,
+  ) {
+    const schedule = await this.scheduleRepository.findOne({
+      where: { id },
+      relations: ['stageLogs'],
+    });
+
+    if (!schedule) {
+      throw new NotFoundException(`Agendamento #${id} não encontrado`);
+    }
+
+    if (dto.latitude !== undefined && dto.longitude !== undefined) {
+      schedule.lastLatitude = dto.latitude;
+      schedule.lastLongitude = dto.longitude;
+    }
+    if (dto.locationName) {
+      schedule.lastLocationName = dto.locationName;
+    }
+    await this.scheduleRepository.save(schedule);
+
+    const logs = (schedule.stageLogs || []).sort(
+      (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime(),
+    );
+    let targetLog = dto.stage ? logs.find((l) => l.stage === dto.stage) : logs.find((l) => !l.endedAt);
+    if (!targetLog && logs.length > 0) {
+      targetLog = logs[0];
+    }
+
+    if (!targetLog) {
+      targetLog = this.stageLogRepository.create({
+        scheduleId: schedule.id,
+        stage: schedule.currentStage,
+        startedAt: new Date(),
+        recordedById: userId,
+      });
+    }
+
+    const currentImages = Array.isArray(targetLog.images) ? [...targetLog.images] : [];
+    const imageItem = {
+      id: `img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      url: dto.url,
+      caption: dto.caption || '',
+      stage: targetLog.stage,
+      capturedAt: new Date().toISOString(),
+      latitude: dto.latitude || targetLog.latitude,
+      longitude: dto.longitude || targetLog.longitude,
+      locationName: dto.locationName || targetLog.locationName,
+    };
+    currentImages.push(imageItem);
+    targetLog.images = currentImages;
+
+    if (dto.latitude !== undefined && dto.longitude !== undefined) {
+      targetLog.latitude = dto.latitude;
+      targetLog.longitude = dto.longitude;
+    }
+    if (dto.locationName) {
+      targetLog.locationName = dto.locationName;
+    }
+
+    await this.stageLogRepository.save(targetLog);
 
     return this.findOne(schedule.id);
   }

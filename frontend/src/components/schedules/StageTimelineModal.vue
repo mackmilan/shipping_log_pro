@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { UnloadingSchedule } from '../../types';
 import StageBadge from '../common/StageBadge.vue';
 import PriorityBadge from '../common/PriorityBadge.vue';
@@ -14,6 +14,9 @@ import {
   AlertTriangle,
   UserCheck,
   Calendar,
+  MapPin,
+  Image as ImageIcon,
+  ExternalLink,
 } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -25,6 +28,7 @@ const emit = defineEmits<{
 }>();
 
 const { t, formatDate } = useI18n();
+const previewImage = ref<{ url: string; caption?: string } | null>(null);
 </script>
 
 <template>
@@ -166,6 +170,56 @@ const { t, formatDate } = useI18n();
                   {{ t('timelineModal.notes') }} {{ log.notes }}
                 </div>
 
+                <!-- Location if present -->
+                <div
+                  v-if="log.locationName || (log.latitude && log.longitude)"
+                  class="text-xs text-sky-300 mt-2 p-2 rounded bg-sky-950/40 border border-sky-800/40 flex items-center justify-between gap-2"
+                >
+                  <div class="flex items-center gap-1.5 overflow-hidden">
+                    <MapPin class="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                    <span class="truncate">{{ log.locationName || `${log.latitude?.toFixed(4)}, ${log.longitude?.toFixed(4)}` }}</span>
+                  </div>
+                  <a
+                    v-if="log.latitude && log.longitude"
+                    :href="`https://www.google.com/maps?q=${log.latitude},${log.longitude}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-[10px] text-sky-400 hover:text-sky-200 flex items-center gap-1 shrink-0 font-medium underline"
+                  >
+                    <span>{{ t('common.viewOnMap') }}</span>
+                    <ExternalLink class="w-3 h-3" />
+                  </a>
+                </div>
+
+                <!-- Attached Images if present -->
+                <div v-if="log.images && log.images.length > 0" class="mt-3">
+                  <div class="text-[11px] font-medium text-slate-400 mb-1.5 flex items-center gap-1">
+                    <ImageIcon class="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{{ t('timelineModal.attachedPhotos', { count: log.images.length }) }}</span>
+                  </div>
+                  <div class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    <div
+                      v-for="(img, imgIdx) in log.images"
+                      :key="img.id || imgIdx"
+                      @click="previewImage = img"
+                      class="group relative aspect-video rounded-lg overflow-hidden border border-slate-700 bg-slate-950 cursor-pointer hover:border-emerald-500/50 transition-all"
+                    >
+                      <img
+                        :src="img.url"
+                        :alt="img.caption || 'Foto da etapa'"
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                        loading="lazy"
+                      />
+                      <div
+                        v-if="img.caption"
+                        class="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5 text-[9px] text-slate-200 truncate"
+                      >
+                        {{ img.caption }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Author info -->
                 <div v-if="log.recordedBy" class="text-[10px] text-slate-500 mt-2 flex items-center gap-1.5">
                   <UserCheck class="w-3 h-3 text-slate-400" />
@@ -186,6 +240,30 @@ const { t, formatDate } = useI18n();
         >
           {{ t('common.close') }}
         </button>
+      </div>
+    </div>
+
+    <!-- Image Preview Lightbox -->
+    <div
+      v-if="previewImage"
+      @click="previewImage = null"
+      class="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center p-4 backdrop-blur-md cursor-pointer"
+    >
+      <div class="relative max-w-4xl max-h-[85vh] flex flex-col items-center" @click.stop>
+        <button
+          @click="previewImage = null"
+          class="absolute -top-10 right-0 text-white hover:text-slate-300 p-1"
+        >
+          <X class="w-6 h-6" />
+        </button>
+        <img
+          :src="previewImage.url"
+          :alt="previewImage.caption || 'Foto da etapa'"
+          class="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl border border-slate-700"
+        />
+        <p v-if="previewImage.caption" class="text-sm text-slate-300 mt-3 text-center">
+          {{ previewImage.caption }}
+        </p>
       </div>
     </div>
   </div>

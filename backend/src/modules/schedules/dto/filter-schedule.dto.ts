@@ -22,4 +22,8 @@ export class FilterScheduleDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiPropertyOptional({ example: 4, description: 'Filtrar por motorista' })
+  @IsOptional()
+  driverId?: number;
 }

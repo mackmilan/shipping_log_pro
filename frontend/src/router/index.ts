@@ -37,6 +37,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/driver',
+    name: 'Driver',
+    component: () => import('../views/DriverView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/users',
     name: 'Users',
     component: () => import('../views/UsersView.vue'),
@@ -62,12 +68,17 @@ router.beforeEach(async (to, from, next) => {
   }
 
   if (to.meta.guestOnly && authStore.isAuthenticated) {
-    next('/dashboard');
+    next(authStore.isDriver ? '/driver' : '/dashboard');
+    return;
+  }
+
+  if (to.path === '/' && authStore.isAuthenticated) {
+    next(authStore.isDriver ? '/driver' : '/dashboard');
     return;
   }
 
   if (to.meta.requiresAdmin && !authStore.isAdmin) {
-    next('/dashboard');
+    next(authStore.isDriver ? '/driver' : '/dashboard');
     return;
   }
 

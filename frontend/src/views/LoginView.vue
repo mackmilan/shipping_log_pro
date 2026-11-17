@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useI18n } from '../i18n';
 import LanguageSelector from '../components/common/LanguageSelector.vue';
-import { Truck, ShieldCheck, ShieldAlert, UserCheck, Lock, Mail, ArrowRight } from 'lucide-vue-next';
+import { Truck, ShieldCheck, ShieldAlert, UserCheck, Lock, Mail, ArrowRight, Compass } from 'lucide-vue-next';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -21,7 +21,7 @@ async function handleLogin() {
   errorMessage.value = '';
   try {
     await authStore.login(email.value, password.value);
-    router.push('/dashboard');
+    router.push(authStore.isDriver ? '/driver' : '/dashboard');
   } catch (err: any) {
     errorMessage.value =
       err.response?.data?.message || t('login.defaultError');
@@ -147,6 +147,23 @@ async function quickLogin(roleEmail: string, rolePass: string) {
             </div>
             <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-medium">
               {{ t('login.operatorDesc') }}
+            </span>
+          </button>
+
+          <button
+            @click="quickLogin('motorista@shippinglog.local', 'motorista123')"
+            type="button"
+            class="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 text-left transition-all text-xs"
+          >
+            <div class="flex items-center gap-2.5">
+              <Compass class="w-4 h-4 text-amber-400" />
+              <div>
+                <span class="font-semibold text-slate-200 block">{{ t('login.driver') }}</span>
+                <span class="text-[10px] text-slate-400 font-mono">motorista@shippinglog.local</span>
+              </div>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-medium">
+              {{ t('login.driverDesc') }}
             </span>
           </button>
 

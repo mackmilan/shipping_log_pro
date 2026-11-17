@@ -15,6 +15,7 @@ import {
   UserCheck,
   CheckCircle,
   XCircle,
+  Compass,
 } from 'lucide-vue-next';
 
 const { t } = useI18n();
@@ -126,6 +127,12 @@ function getRoleConfig(role: UserRole) {
         label: t('roles.operator'),
         class: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
         icon: ShieldAlert,
+      };
+    case UserRole.DRIVER:
+      return {
+        label: t('roles.driver'),
+        class: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+        icon: Compass,
       };
     default:
       return {
@@ -298,6 +305,7 @@ function getRoleConfig(role: UserRole) {
               >
                 <option :value="UserRole.ADMIN">{{ t('users.roleAdminDesc') }}</option>
                 <option :value="UserRole.OPERATOR">{{ t('users.roleOperatorDesc') }}</option>
+                <option :value="UserRole.DRIVER">{{ t('users.roleDriverDesc') }}</option>
                 <option :value="UserRole.USER">{{ t('users.roleUserDesc') }}</option>
               </select>
             </div>

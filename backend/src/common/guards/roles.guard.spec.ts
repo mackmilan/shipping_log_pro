@@ -50,6 +50,20 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(context)).toBe(false);
   });
 
+  it('should allow DRIVER access to DRIVER protected role', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.DRIVER]);
+    const context = createMockContext({ role: UserRole.DRIVER });
+
+    expect(guard.canActivate(context)).toBe(true);
+  });
+
+  it('should deny DRIVER access to ADMIN only protected role', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
+    const context = createMockContext({ role: UserRole.DRIVER });
+
+    expect(guard.canActivate(context)).toBe(false);
+  });
+
   it('should deny access if user is not authenticated', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.USER]);
     const context = createMockContext(null);

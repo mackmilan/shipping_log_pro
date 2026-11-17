@@ -56,4 +56,20 @@ test.describe('Autenticação e Navegação por Perfil', () => {
     // Botão de Nova Janela NÃO deve aparecer para Usuário visualizador
     await expect(page.getByRole('button', { name: /Nova Janela/i })).not.toBeVisible();
   });
+
+  test('deve realizar login como Motorista e acessar diretamente a tela operacional simplificada', async ({ page }) => {
+    await page.goto('/login');
+
+    // Clica no botão de acesso rápido Demo para Motorista
+    await page.getByRole('button', { name: /Motorista/i }).click();
+
+    // Redireciona diretamente para a tela do motorista
+    await expect(page).toHaveURL(/.*driver/);
+    await expect(page.getByText('ShippingLog Motorista')).toBeVisible();
+
+    // Verifica elementos da tela operacional simplificada
+    await expect(page.getByText('Avançar Etapa do Caminhão')).toBeVisible();
+    await expect(page.getByText('Localização GPS em Tempo Real')).toBeVisible();
+    await expect(page.getByText('Fotos & Comprovantes da Etapa')).toBeVisible();
+  });
 });

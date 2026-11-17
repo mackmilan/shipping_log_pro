@@ -44,6 +44,27 @@ export class StageLog {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @Column({ type: 'float', nullable: true })
+  latitude: number;
+
+  @Column({ type: 'float', nullable: true })
+  longitude: number;
+
+  @Column({ type: 'text', nullable: true })
+  locationName: string;
+
+  @Column({ type: 'simple-json', nullable: true })
+  images: Array<{
+    id?: string;
+    url: string;
+    caption?: string;
+    stage?: ScheduleStage;
+    capturedAt?: string;
+    latitude?: number;
+    longitude?: number;
+    locationName?: string;
+  }>;
+
   @Column({ nullable: true })
   recordedById: number;
 

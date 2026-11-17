@@ -2,6 +2,7 @@ export enum UserRole {
   ADMIN = 'ADMIN',
   OPERATOR = 'OPERATOR',
   USER = 'USER',
+  DRIVER = 'DRIVER',
 }
 
 export enum ScheduleStage {
@@ -65,6 +66,17 @@ export interface Dock {
   createdAt: string;
 }
 
+export interface StageImageItem {
+  id?: string;
+  url: string;
+  caption?: string;
+  stage?: ScheduleStage;
+  capturedAt?: string;
+  latitude?: number;
+  longitude?: number;
+  locationName?: string;
+}
+
 export interface StageLog {
   id: number;
   scheduleId: number;
@@ -74,6 +86,10 @@ export interface StageLog {
   durationMinutes: number;
   reason?: string;
   notes?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationName?: string | null;
+  images?: StageImageItem[];
   recordedById?: number;
   recordedBy?: {
     id: number;
@@ -100,6 +116,8 @@ export interface UnloadingSchedule {
   truck: Truck;
   dockId?: number | null;
   dock?: Dock | null;
+  driverId?: number | null;
+  driver?: User | null;
   scheduledStartTime: string;
   scheduledEndTime: string;
   actualArrivalAt?: string | null;
@@ -112,6 +130,9 @@ export interface UnloadingSchedule {
   invoiceNumber?: string | null;
   estimatedDurationMinutes: number;
   notes?: string | null;
+  lastLatitude?: number | null;
+  lastLongitude?: number | null;
+  lastLocationName?: string | null;
   stageLogs: StageLog[];
   metrics: ScheduleMetrics;
   createdAt: string;

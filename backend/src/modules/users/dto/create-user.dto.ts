@@ -17,7 +17,7 @@ export class CreateUserDto {
   password: string;
 
   @ApiProperty({ enum: UserRole, default: UserRole.USER })
-  @IsEnum(UserRole, { message: 'Role deve ser ADMIN, OPERATOR ou USER' })
+  @IsEnum(UserRole, { message: 'Role deve ser ADMIN, OPERATOR, USER ou DRIVER' })
   role: UserRole;
 
   @ApiPropertyOptional({ default: true })
