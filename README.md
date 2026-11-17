@@ -326,4 +326,4 @@ The backend exposes an interactive **OpenAPI / Swagger 3.0** documentation inter
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE) (or proprietary as configured by the organization).
+This project is licensed under the [Apache License 2.0](LICENSE).

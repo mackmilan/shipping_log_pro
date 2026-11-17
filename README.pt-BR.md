@@ -195,3 +195,9 @@ Principais rotas da API:
 - `GET /api/docks`: Gestão das docas de recebimento.
 - `GET /api/trucks`: Cadastro de caminhões e transportadoras.
 - `GET /api/users`: Gestão de usuários locais (exclusivo para Administrador).
+
+---
+
+## 📄 Licença
+
+Este projeto está licenciado sob os termos da [Apache License 2.0](LICENSE).

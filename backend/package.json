@@ -4,7 +4,7 @@
   "description": "API NestJS para Controle de Janela de Tempos de Descarga de Caminhões",
   "author": "",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "node ./node_modules/@nestjs/cli/bin/nest.js build",
     "format": "prettier --write \"src/**/*.ts\"",
