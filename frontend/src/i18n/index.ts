@@ -100,7 +100,7 @@ export function formatTime(minutes: number): string {
   }
   const hours = Math.floor(m / 60);
   const remainingM = m % 60;
-  return `${hours}h ${remainingM > 0 ? remainingM + 'm' : ''}`;
+  return remainingM > 0 ? `${hours}h ${remainingM}m` : `${hours}h`;
 }
 
 export function useI18n() {

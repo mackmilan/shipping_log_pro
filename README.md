@@ -63,6 +63,13 @@ Built with **NestJS**, **TypeORM**, **SQLite**, **Vue 3**, **TypeScript**, and *
 - Role-based route guards in both backend APIs and Vue Router navigation.
 - Zero external third-party authentication dependencies required.
 
+### 6. 🌐 Internationalization (i18n) & Language Switcher
+- Full bilingual support: **International English (`en`)** and **Brazilian Portuguese (`pt-BR`)**.
+- Seamless translations across all 6 views (Login, Dashboard, Schedules, Docks, Trucks, Users), modals, forms, tables, timeline chronometry, and status/priority badges.
+- Dynamic runtime language selector available in the navigation bar and on the login page (toggle between 🇧🇷 PT-BR and 🌐 EN).
+- Automatic persistence of language preference in `localStorage` (`shipping_log_locale`).
+- High-performance, zero-external-dependency reactive architecture built natively on Vue 3 Composition API with full TypeScript parity checking.
+
 ---
 
 ## 🏗 System Architecture
@@ -88,7 +95,8 @@ shipping_log_pro/
 │
 ├── frontend/                 # Single Page Application (Vue 3 + Vite + Tailwind CSS)
 │   ├── src/
-│   │   ├── components/       # Status badges, navigation layout, stage transition modals
+│   │   ├── components/       # Status badges, navigation layout, stage transition modals, LanguageSelector
+│   │   ├── i18n/             # Reactive i18n engine and typed dictionaries (pt-BR, en)
 │   │   ├── router/           # Vue Router with navigation guards per role
 │   │   ├── services/         # Axios HTTP client with JWT interceptors
 │   │   ├── stores/           # Pinia reactive state stores (auth, schedules, docks, trucks)
@@ -98,6 +106,7 @@ shipping_log_pro/
 │
 ├── e2e/                      # Playwright End-to-End browser test suite
 │   ├── auth-and-navigation.spec.ts
+│   ├── i18n-language-switch.spec.ts
 │   ├── schedules-workflow.spec.ts
 │   └── users-management.spec.ts
 │

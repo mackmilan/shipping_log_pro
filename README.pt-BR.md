@@ -41,13 +41,20 @@ shipping_log_pro/
 │
 ├── frontend/                 # SPA Vue 3 + TypeScript + Tailwind CSS
 │   ├── src/
-│   │   ├── components/       # Badges, Layout, Modais de Etapa e Linha do Tempo
+│   │   ├── components/       # Badges, Layout, Modais de Etapa e Linha do Tempo, LanguageSelector
+│   │   ├── i18n/             # Motor reativo de i18n e dicionários tipados (pt-BR, en)
 │   │   ├── router/           # Vue Router com Route Guards por perfil
 │   │   ├── services/         # Axios com interceptores de autenticação JWT
 │   │   ├── stores/           # Pinia stores (auth, schedules, docks, trucks)
 │   │   ├── types/            # Interfaces e Enums TypeScript
 │   │   └── views/            # Dashboard, Janelas (Lista & Kanban), Docas, Caminhões, Usuários
 │   └── vite.config.ts
+│
+├── e2e/                      # Suíte de testes E2E com Playwright
+│   ├── auth-and-navigation.spec.ts
+│   ├── i18n-language-switch.spec.ts
+│   ├── schedules-workflow.spec.ts
+│   └── users-management.spec.ts
 │
 └── package.json              # Scripts orquestrados do monorepo
 ```
@@ -77,6 +84,13 @@ shipping_log_pro/
 4. **Visualização Dupla: Lista e Kanban**:
    - Visualização em tabela com tempos acumulados por etapa.
    - Visualização em quadro com colunas dinâmicas por status.
+
+5. **Internacionalização (i18n) e Troca de Idioma em Tempo Real**:
+   - Suporte bilíngue completo: **Português Brasileiro (`pt-BR`)** e **Inglês Internacional (`en`)**.
+   - Cobertura em todas as telas (Login, Dashboard, Janelas de Descarga, Docas, Caminhões e Usuários), modais de ação, formulários, tabelas e badges de status/prioridade.
+   - Alternador de idioma instantâneo na barra superior e na tela de login (🇧🇷 PT-BR e 🌐 EN).
+   - Preferência persistida automaticamente no navegador via `localStorage` (`shipping_log_locale`).
+   - Implementação nativa reativa e tipada no Vue 3 via Composition API, sem sobrecarga de dependências externas.
 
 ---
 
