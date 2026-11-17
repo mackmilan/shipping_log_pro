@@ -1,0 +1,197 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# ShippingLog PRO - Script Unificado de CI (Setup, Builds, Testes e Reports)
+# ==============================================================================
+
+set -e
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$PROJECT_ROOT"
+
+# Cores para formatação de terminal
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+print_banner() {
+  echo -e "\n${CYAN}==============================================================================${NC}"
+  echo -e "${BOLD} 🚚  ShippingLog PRO - Pipeline de CI: Setup, Testes & Relatórios${NC}"
+  echo -e "${CYAN}==============================================================================${NC}\n"
+}
+
+print_step() {
+  echo -e "\n${BLUE}${BOLD}==>${NC} ${BOLD}$1${NC}"
+}
+
+print_success() {
+  echo -e "${GREEN}✔ $1${NC}"
+}
+
+print_error() {
+  echo -e "${RED}✖ $1${NC}"
+}
+
+show_help() {
+  print_banner
+  echo -e "Uso: ./ci [OPÇÃO]\n"
+  echo -e "Opções disponíveis:"
+  echo -e "  ${BOLD}(sem argumentos)${NC}  Executa o pipeline completo: Setup + Build + Testes Backend + Testes Frontend + E2E com Relatórios"
+  echo -e "  ${BOLD}--ui, -u${NC}         Executa o setup e abre a interface gráfica interativa do Playwright (UI Mode)"
+  echo -e "  ${BOLD}--report, -r${NC}     Abre o relatório HTML gerado pelos testes E2E no navegador"
+  echo -e "  ${BOLD}--setup-only${NC}     Executa apenas a instalação das dependências e builds dos projetos"
+  echo -e "  ${BOLD}--no-e2e${NC}         Executa o setup e testes unitários (backend e frontend), ignorando testes E2E"
+  echo -e "  ${BOLD}--help, -h${NC}       Exibe esta tela de ajuda\n"
+}
+
+# Tratamento de argumentos
+RUN_UI=false
+SHOW_REPORT_ONLY=false
+SETUP_ONLY=false
+SKIP_E2E=false
+
+for arg in "$@"; do
+  case $arg in
+    --ui|-u|--e2e-ui)
+      RUN_UI=true
+      shift
+      ;;
+    --report|-r|--show-report)
+      SHOW_REPORT_ONLY=true
+      shift
+      ;;
+    --setup-only)
+      SETUP_ONLY=true
+      shift
+      ;;
+    --no-e2e)
+      SKIP_E2E=true
+      shift
+      ;;
+    --help|-h)
+      show_help
+      exit 0
+      ;;
+    *)
+      # Outros argumentos
+      ;;
+  esac
+done
+
+if [ "$SHOW_REPORT_ONLY" = true ]; then
+  if [ -f "$PROJECT_ROOT/playwright-report/index.html" ]; then
+    echo -e "${BLUE}Abrindo relatório de testes E2E no navegador...${NC}"
+    node ./node_modules/@playwright/test/cli.js show-report playwright-report
+    exit 0
+  else
+    print_error "Nenhum relatório encontrado em 'playwright-report/index.html'. Execute './ci' primeiro para rodar os testes."
+    exit 1
+  fi
+fi
+
+print_banner
+
+# ------------------------------------------------------------------------------
+# PASSO 1: Setup do Ambiente e Dependências
+# ------------------------------------------------------------------------------
+print_step "Passo 1/5: Verificando ambiente e instalando dependências..."
+
+NODE_VER=$(node -v 2>/dev/null || echo "not found")
+NPM_VER=$(npm -v 2>/dev/null || echo "not found")
+
+if [ "$NODE_VER" = "not found" ]; then
+  print_error "Node.js não foi encontrado no PATH. Por favor instale o Node.js v18+."
+  exit 1
+fi
+
+echo -e "Ambiente detectado: Node.js ${CYAN}${NODE_VER}${NC} | npm ${CYAN}${NPM_VER}${NC}"
+
+# Instala dependências caso ainda não existam
+if [ ! -d "$PROJECT_ROOT/backend/node_modules" ]; then
+  echo -e "Instalando dependências do backend..."
+  npm install --prefix backend
+fi
+
+if [ ! -d "$PROJECT_ROOT/frontend/node_modules" ]; then
+  echo -e "Instalando dependências do frontend..."
+  npm install --prefix frontend
+fi
+
+if [ ! -d "$PROJECT_ROOT/node_modules" ] || [ ! -d "$PROJECT_ROOT/node_modules/@playwright/test" ]; then
+  echo -e "Instalando dependências do root e Playwright..."
+  npm install
+fi
+
+print_success "Dependências verificadas e prontas."
+
+# ------------------------------------------------------------------------------
+# PASSO 2: Build do Backend e Frontend
+# ------------------------------------------------------------------------------
+print_step "Passo 2/5: Compilando Backend (NestJS) e Frontend (Vue 3 + Vite)..."
+
+echo -e "Compilando NestJS..."
+node ./backend/node_modules/@nestjs/cli/bin/nest.js build --path ./backend/tsconfig.json
+print_success "Backend compilado em dist/."
+
+echo -e "Validando tipos e gerando bundle de produção do Frontend..."
+node ./frontend/node_modules/vue-tsc/bin/vue-tsc.js --noEmit --project ./frontend/tsconfig.json
+(cd "$PROJECT_ROOT/frontend" && node ./node_modules/vite/bin/vite.js build)
+print_success "Frontend compilado com sucesso."
+
+if [ "$SETUP_ONLY" = true ]; then
+  echo -e "\n${GREEN}${BOLD}✔ Setup concluído com sucesso (--setup-only)!${NC}\n"
+  exit 0
+fi
+
+# ------------------------------------------------------------------------------
+# PASSO 3: Testes Unitários e de Integração do Backend (Jest)
+# ------------------------------------------------------------------------------
+print_step "Passo 3/5: Executando testes do Backend (Jest) com cobertura de código..."
+
+node ./backend/node_modules/jest/bin/jest.js --config ./backend/jest.config.js --coverage --runInBand
+print_success "Todos os testes do backend passaram com sucesso!"
+
+# ------------------------------------------------------------------------------
+# PASSO 4: Testes de Componentes e Stores do Frontend (Vitest)
+# ------------------------------------------------------------------------------
+print_step "Passo 4/5: Executando testes unitários do Frontend (Vitest)..."
+
+(cd "$PROJECT_ROOT/frontend" && node ./node_modules/vitest/vitest.mjs run --coverage)
+print_success "Todos os testes do frontend passaram com sucesso!"
+
+# ------------------------------------------------------------------------------
+# PASSO 5: Testes Ponta a Ponta (E2E) com Playwright
+# ------------------------------------------------------------------------------
+if [ "$SKIP_E2E" = false ]; then
+  if [ "$RUN_UI" = true ]; then
+    print_step "Passo 5/5: Abrindo Interface Visual Interativa do Playwright (UI Mode)..."
+    echo -e "${CYAN}Dica: Selecione qualquer teste na janela aberta para assistir à execução ao vivo com time-travel!${NC}"
+    node ./node_modules/@playwright/test/cli.js test --ui
+  else
+    print_step "Passo 5/5: Executando testes E2E (Playwright) e gerando relatórios com evidências..."
+    node ./node_modules/@playwright/test/cli.js test
+    print_success "Testes E2E executados com sucesso!"
+  fi
+else
+  echo -e "\n${YELLOW}Pulando testes E2E (--no-e2e especificado).${NC}"
+fi
+
+# ------------------------------------------------------------------------------
+# RESUMO E LINKS DOS RELATÓRIOS
+# ------------------------------------------------------------------------------
+echo -e "\n${CYAN}==============================================================================${NC}"
+echo -e "${GREEN}${BOLD} 🎉  PIPELINE DE CI EXECUTADO COM SUCESSO! TODOS OS TESTES PASSARAM!${NC}"
+echo -e "${CYAN}==============================================================================${NC}\n"
+
+echo -e "${BOLD}Relatórios Gerados:${NC}"
+echo -e "  📄 ${BOLD}E2E Playwright HTML Report:${NC}  ${CYAN}file://$PROJECT_ROOT/playwright-report/index.html${NC}"
+echo -e "  📊 ${BOLD}Backend Jest Coverage Report:${NC} ${CYAN}file://$PROJECT_ROOT/backend/coverage/lcov-report/index.html${NC}"
+echo -e "  📈 ${BOLD}Frontend Vitest Coverage:${NC}     ${CYAN}file://$PROJECT_ROOT/frontend/coverage/index.html${NC}\n"
+
+echo -e "${BOLD}Comandos Rápidos:${NC}"
+echo -e "  ${BOLD}./ci --report${NC}     ➔ Abre o relatório visual interativo dos testes E2E no navegador"
+echo -e "  ${BOLD}./ci --ui${NC}         ➔ Abre o Playwright em modo UI para debugar e rodar testes ao vivo"
+echo -e "  ${BOLD}npm run dev${NC}       ➔ Inicia os servidores de desenvolvimento (Backend :3000 | Frontend :5173)\n"

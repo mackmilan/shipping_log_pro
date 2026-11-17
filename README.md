@@ -104,21 +104,26 @@ As seguintes etapas são controladas pelo sistema:
 
 ## 🚀 Instalação e Execução
 
-### Pré-requisitos
-- **Node.js** (versão 18 ou superior)
-- **npm** (versão 9 ou superior)
+### Script de Automação e CI (`./ci`)
 
-### 1. Clonar ou navegar até a pasta do projeto
+O projeto inclui um script automatizado chamado `ci` na raiz que realiza todo o setup do ambiente e executa todas as suítes de testes (Backend, Frontend e E2E) com relatórios completos:
+
 ```bash
-cd /Users/andresilva/dev/work/shipping_log_pro
+# Executa o pipeline completo: Setup + Builds + Testes Unitários + Testes E2E com Relatórios
+./ci
+# ou
+npm run ci
 ```
 
-### 2. Instalar dependências (Backend e Frontend)
-```bash
-npm run install:all
-```
+#### Modos e Opções do Script `ci`:
+- `./ci --ui` (ou `npm run test:e2e:ui`): Abre a interface gráfica interativa do **Playwright UI Mode** para assistir à execução dos testes ponta a ponta ao vivo com *time-travel debugger*.
+- `./ci --report` (ou `npm run test:e2e:report`): Abre o relatório visual interativo em HTML gerado pelo Playwright com capturas de tela e passos executados.
+- `./ci --setup-only` (ou `npm run setup`): Realiza apenas a verificação de dependências e builds dos projetos.
+- `./ci --no-e2e`: Executa setup e testes unitários (backend e frontend), ignorando a etapa E2E.
 
-### 3. Iniciar a aplicação em desenvolvimento
+---
+
+### Execução Manual e Desenvolvimento
 
 Você pode iniciar ambos os serviços separadamente ou juntos:
 

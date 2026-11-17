@@ -40,8 +40,8 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3000;
-  await app.listen(port);
-  logger.log(`🚀 Backend rodando com sucesso em http://localhost:${port}/api`);
+  await app.listen(port, '127.0.0.1');
+  logger.log(`🚀 Backend rodando com sucesso em http://127.0.0.1:${port}/api`);
   logger.log(`📚 Documentação Swagger disponível em http://localhost:${port}/api/docs`);
 }
 bootstrap();
