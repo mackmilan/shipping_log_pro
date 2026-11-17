@@ -8,7 +8,7 @@ test.describe('Internacionalização (i18n) - Português e Inglês', () => {
     await expect(page.getByRole('button', { name: /Acessar Sistema/i })).toBeVisible();
 
     // 2. Alterna para Inglês Internacional (EN) na tela de login
-    const enButton = page.getByRole('button', { name: /EN/i });
+    const enButton = page.getByRole('button', { name: /\bEN\b/ });
     await expect(enButton).toBeVisible();
     await enButton.click();
 
@@ -61,7 +61,7 @@ test.describe('Internacionalização (i18n) - Português e Inglês', () => {
     await expect(page.getByRole('button', { name: /New User/i })).toBeVisible();
 
     // 9. Alterna de volta para Português Brasileiro (PT-BR) no menu lateral
-    const ptButton = page.getByRole('button', { name: /PT-BR/i });
+    const ptButton = page.getByRole('button', { name: /\bPT-BR\b/ });
     await expect(ptButton).toBeVisible();
     await ptButton.click();
 
